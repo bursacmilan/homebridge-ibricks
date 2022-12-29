@@ -2,7 +2,7 @@
   "private": true,
   "displayName": "iBricks Plugin",
   "name": "homebridge-ibricks-plugin",
-  "version": "2.0.0",
+  "version": "0.1.0",
   "description": "A short description about what your plugin does.",
   "license": "Apache-2.0",
   "repository": {
