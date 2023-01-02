@@ -1,9 +1,9 @@
 import {Service, PlatformAccessory, CharacteristicValue, PlatformConfig} from 'homebridge';
-import {iBricksRelay} from './iBricks/iBricksRelay';
 import {iBricksPlatform} from './iBricksPlatform';
 import {RelayRequest} from './models/RelayRequest';
 import {RelayResponse} from './models/RelayResponse';
 import {Helper} from './Helper';
+import {IBricksApiService} from './iBricksApiService';
 
 /**
  * Platform Accessory
@@ -13,7 +13,6 @@ import {Helper} from './Helper';
 export class iBricksLightPlatformAccessory {
 
   private service: Service;
-  private iBricksRelay: iBricksRelay;
   private relayResponse?: RelayResponse;
   private skipNext = false;
 
@@ -22,6 +21,7 @@ export class iBricksLightPlatformAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly deviceId: string,
     private readonly config: PlatformConfig,
+    private readonly iBricksApiService: IBricksApiService<RelayResponse, RelayRequest>,
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
@@ -31,8 +31,6 @@ export class iBricksLightPlatformAccessory {
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.description);
 
-    this.iBricksRelay = new iBricksRelay(accessory.context.device.id, config, this.platform);
-
     // Set characteristics
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.setIsOn.bind(this))
@@ -40,7 +38,7 @@ export class iBricksLightPlatformAccessory {
 
     // Interval update
     setInterval(() => {
-      this.iBricksRelay.getRemoteData().then((data) => {
+      this.iBricksApiService.getRemoteData(this.deviceId).then((data) => {
         if (this.skipNext) {
           this.skipNext = false;
           return;
@@ -53,8 +51,8 @@ export class iBricksLightPlatformAccessory {
   }
 
   async setIsOn(value: CharacteristicValue) {
-    this.iBricksRelay.setRemoteData(new RelayRequest(value as boolean)).then().catch(() => {
-      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    this.iBricksApiService.setRemoteData(this.deviceId, new RelayRequest(value as boolean)).then().catch(() => {
+      throw Helper.getCommunicationFailureError(this.platform);
     });
   }
 

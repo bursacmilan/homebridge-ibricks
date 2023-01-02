@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "iBricks Plugin",
   "name": "homebridge-ibricks-plugin",
   "version": "1.0.0",

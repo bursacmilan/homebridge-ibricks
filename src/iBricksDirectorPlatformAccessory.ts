@@ -1,9 +1,9 @@
 import {Service, PlatformAccessory, CharacteristicValue, PlatformConfig} from 'homebridge';
 import {iBricksPlatform} from './iBricksPlatform';
-import {IBricksDirector} from './iBricks/iBricksDirector';
 import {DirectorResponse} from './models/DirectorResponse';
 import {Helper} from './Helper';
 import {DirectorRequest} from './models/DirectorRequest';
+import {IBricksApiService} from './iBricksApiService';
 
 /**
  * Platform Accessory
@@ -13,7 +13,6 @@ import {DirectorRequest} from './models/DirectorRequest';
 export class iBricksDirectorPlatformAccessory {
 
   private service: Service;
-  private iBricksDirector: IBricksDirector;
   private directorResponse?: DirectorResponse;
   private skipNext = false;
 
@@ -22,6 +21,7 @@ export class iBricksDirectorPlatformAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly deviceId: string,
     private readonly config: PlatformConfig,
+    private readonly iBricksApiService: IBricksApiService<DirectorResponse, DirectorRequest>,
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
@@ -32,8 +32,6 @@ export class iBricksDirectorPlatformAccessory {
       this.accessory.addService(this.platform.Service.Thermostat);
 
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.description);
-
-    this.iBricksDirector = new IBricksDirector(accessory.context.device.id, config, this.platform);
 
     // Set characteristics
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
@@ -50,17 +48,16 @@ export class iBricksDirectorPlatformAccessory {
       .onGet((() => 1));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
-      .onGet((() => 1))
-      .onSet((value) => console.log(value));
+      .onGet((() => 1));
 
     // Interval updates
     setInterval(() => {
-      this.iBricksDirector.getRemoteData().then((data) => {
+      this.iBricksApiService.getRemoteData(this.deviceId).then((data) => {
         if (this.skipNext) {
           this.skipNext = false;
           return;
         }
-        
+
         this.directorResponse = data;
         this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.currentTemperature);
         this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, data.targetTemperature);
@@ -82,7 +79,7 @@ export class iBricksDirectorPlatformAccessory {
 
   async setRemoteData(value: CharacteristicValue) {
     try {
-      await this.iBricksDirector.setRemoteData(new DirectorRequest(value as number));
+      await this.iBricksApiService.setRemoteData(this.deviceId, new DirectorRequest(value as number));
     } catch {
       throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }

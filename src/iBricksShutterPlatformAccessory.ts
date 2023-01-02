@@ -1,9 +1,9 @@
 import {Service, PlatformAccessory, CharacteristicValue, PlatformConfig} from 'homebridge';
 import {iBricksPlatform} from './iBricksPlatform';
-import {iBricksShutter} from './iBricks/iBricksShutter';
 import {ShutterResponse} from './models/ShutterResponse';
 import {Helper} from './Helper';
 import {ShutterRequest} from './models/ShutterRequest';
+import {IBricksApiService} from './iBricksApiService';
 
 /**
  * Platform Accessory
@@ -13,7 +13,6 @@ import {ShutterRequest} from './models/ShutterRequest';
 export class iBricksShutterPlatformAccessory {
 
   private service: Service;
-  private iBricksShutter: iBricksShutter;
   private shutterResponse?: ShutterResponse;
   private skipNext = false;
 
@@ -22,6 +21,7 @@ export class iBricksShutterPlatformAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly deviceId: string,
     private readonly config: PlatformConfig,
+    private readonly iBricksApiService: IBricksApiService<ShutterResponse, ShutterRequest>,
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
@@ -33,8 +33,6 @@ export class iBricksShutterPlatformAccessory {
 
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.description);
 
-    this.iBricksShutter = new iBricksShutter(accessory.context.device.id, config, this.platform);
-
     // Set characteristics
     this.service.getCharacteristic(this.platform.Characteristic.CurrentPosition)
       .onGet(((value) => this.getData(value, 'shutter')));
@@ -44,18 +42,18 @@ export class iBricksShutterPlatformAccessory {
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetPosition)
       .onGet(((value) => this.getData(value, 'shutterTarget')))
-      .onSet(((value) => this.setShutter(value)));
+      .onSet(((value) => this.setData(value, undefined)));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
       .onGet(((value) => this.getData(value, 'lamellaTarget')))
-      .onSet(this.setLamella.bind(this));
+      .onSet(((value) => this.setData(undefined, value)));
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle)
       .onGet(((value) => this.getData(value, 'lamella')));
 
     // Set update interval
     setInterval(() => {
-      this.iBricksShutter.getRemoteData().then((data) => {
+      this.iBricksApiService.getRemoteData(accessory.context.device.id).then((data) => {
         if (this.skipNext) {
           this.skipNext = false;
           return;
@@ -81,17 +79,10 @@ export class iBricksShutterPlatformAccessory {
     return this.shutterResponse[property];
   }
 
-  async setShutter(value: CharacteristicValue) {
+  async setData(shutter?: CharacteristicValue, lamella?: CharacteristicValue) {
     this.skipNext = true;
-    await this.iBricksShutter.setRemoteData(new ShutterRequest(undefined, value as number)).then().catch(() => {
-      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
-    });
-  }
-
-  async setLamella(value: CharacteristicValue) {
-    this.skipNext = true;
-    await this.iBricksShutter.setRemoteData(new ShutterRequest(value as number, undefined)).then().catch(() => {
-      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    await this.iBricksApiService.setRemoteData(this.deviceId, new ShutterRequest(lamella as number, shutter as number)).then().catch(() => {
+      throw Helper.getCommunicationFailureError(this.platform);
     });
   }
 }
