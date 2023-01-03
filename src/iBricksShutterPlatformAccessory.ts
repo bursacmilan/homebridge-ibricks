@@ -35,21 +35,21 @@ export class iBricksShutterPlatformAccessory {
 
     // Set characteristics
     this.service.getCharacteristic(this.platform.Characteristic.CurrentPosition)
-      .onGet(((value) => this.getData(value, 'shutter')));
+      .onGet((() => this.getData('shutter')));
 
     this.service.getCharacteristic(this.platform.Characteristic.PositionState)
-      .onGet(((value) => this.getData(value, 'shutterDirection')));
+      .onGet((() => this.getData('shutterDirection')));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetPosition)
-      .onGet(((value) => this.getData(value, 'shutterTarget')))
+      .onGet((() => this.getData('shutterTarget')))
       .onSet(((value) => this.setData(value, undefined)));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle)
-      .onGet(((value) => this.getData(value, 'lamellaTarget')))
+      .onGet((() => this.getData('lamellaTarget')))
       .onSet(((value) => this.setData(undefined, value)));
 
     this.service.getCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle)
-      .onGet(((value) => this.getData(value, 'lamella')));
+      .onGet((() => this.getData('lamella')));
 
     // Set update interval
     setInterval(() => {
@@ -59,7 +59,7 @@ export class iBricksShutterPlatformAccessory {
           return;
         }
 
-        this.shutterResponse = data;
+        this.updateShutterResponse(data);
         this.service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, data.shutter);
         this.service.updateCharacteristic(this.platform.Characteristic.PositionState, data.shutterDirection);
         this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, data.shutterTarget);
@@ -69,7 +69,7 @@ export class iBricksShutterPlatformAccessory {
     }, this.platform.updateInterval);
   }
 
-  async getData(value: CharacteristicValue, property: string) {
+  private getData(property: string) {
     if (!this.shutterResponse) {
       this.platform.log.debug('No data yet, throw error');
       throw Helper.getCommunicationFailureError(this.platform);
@@ -79,10 +79,24 @@ export class iBricksShutterPlatformAccessory {
     return this.shutterResponse[property];
   }
 
-  async setData(shutter?: CharacteristicValue, lamella?: CharacteristicValue) {
-    this.skipNext = true;
-    await this.iBricksApiService.setRemoteData(this.deviceId, new ShutterRequest(lamella as number, shutter as number)).then().catch(() => {
+  private async setData(shutter?: CharacteristicValue, lamella?: CharacteristicValue) {
+    await this.iBricksApiService.getRemoteData(this.deviceId).then((data) => this.updateShutterResponse(data)).catch(() => {
       throw Helper.getCommunicationFailureError(this.platform);
     });
+
+    this.skipNext = true;
+    await this.iBricksApiService.setRemoteData(this.deviceId,
+      new ShutterRequest(
+        (lamella as number) ?? this.shutterResponse?.lamella,
+        (shutter as number) ?? this.shutterResponse?.shutter)).then().catch(() => {
+      throw Helper.getCommunicationFailureError(this.platform);
+    });
+  }
+
+  private updateShutterResponse(data: ShutterResponse) {
+    this.shutterResponse = data;
+    if (this.shutterResponse.shutter === 100) {
+      this.shutterResponse.lamella = 90;
+    }
   }
 }

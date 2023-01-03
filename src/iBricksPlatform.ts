@@ -57,8 +57,8 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     // Shutter
     const iBricksApiServiceShutter = new IBricksApiService<ShutterResponse, ShutterRequest>(this, config, 'Shutter',
       (response: ShutterResponse) => {
-        response.lamellaTarget = Math.round((response.lamellaTarget / 100 * 180) - 90);
-        response.lamella = Math.round((response.lamella / 100 * 180) - 90);
+        response.lamellaTarget = Math.round((response.lamellaTarget + 90) / 180 * 100);
+        response.lamella = Math.round((response.lamella + 90) / 180 * 100);
       });
 
     this.addDevices(config, 'shutter',

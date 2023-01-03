@@ -11,7 +11,7 @@ export class ShutterRequest extends IBricksApiRequest {
     this.shutter = shutter;
 
     if(this.lamella) {
-      this.lamella = Math.round(((this.lamella + 90) / 180 * 100));
+      this.lamella = Math.round(((this.lamella / 100) * 180 - 90));
     }
   }
 }
