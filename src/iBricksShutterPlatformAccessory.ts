@@ -69,14 +69,21 @@ export class iBricksShutterPlatformAccessory {
     }, this.platform.updateInterval);
   }
 
-  private getData(property: string) {
+  private async getData(property: string) {
     if (!this.shutterResponse) {
-      this.platform.log.debug('No data yet, throw error');
-      throw Helper.getCommunicationFailureError(this.platform);
+      await this.iBricksApiService.getRemoteData(this.deviceId).then((data) => {
+        this.updateShutterResponse(data);
+
+        if(!this.shutterResponse) {
+          throw Helper.getCommunicationFailureError(this.platform);
+        }
+      }).catch(() => {
+        throw Helper.getCommunicationFailureError(this.platform);
+      });
     }
 
     this.platform.log.debug('Shutter getData ->', JSON.stringify(this.shutterResponse));
-    return this.shutterResponse[property];
+    return this.shutterResponse![property];
   }
 
   private async setData(shutter?: CharacteristicValue, lamella?: CharacteristicValue) {
