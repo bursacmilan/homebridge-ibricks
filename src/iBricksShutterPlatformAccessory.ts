@@ -87,8 +87,8 @@ export class iBricksShutterPlatformAccessory {
     this.skipNext = true;
     await this.iBricksApiService.setRemoteData(this.deviceId,
       new ShutterRequest(
-        (lamella as number) ?? this.shutterResponse?.lamella,
-        (shutter as number) ?? this.shutterResponse?.shutter)).then().catch(() => {
+        (shutter as number) === 100 ? 90 : (lamella as number),
+        (shutter as number))).then().catch(() => {
       throw Helper.getCommunicationFailureError(this.platform);
     });
   }
