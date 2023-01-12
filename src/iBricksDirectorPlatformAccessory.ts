@@ -1,4 +1,6 @@
+/*
 import {Service, PlatformAccessory, CharacteristicValue, PlatformConfig} from 'homebridge';
+
 import {iBricksPlatform} from './iBricksPlatform';
 import {DirectorResponse} from './models/DirectorResponse';
 import {Helper} from './Helper';
@@ -9,7 +11,7 @@ import {IBricksApiService} from './iBricksApiService';
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
- */
+ *//*
 export class iBricksDirectorPlatformAccessory {
 
   private service: Service;
@@ -85,3 +87,4 @@ export class iBricksDirectorPlatformAccessory {
     }
   }
 }
+*/

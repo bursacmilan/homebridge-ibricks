@@ -5,8 +5,23 @@
   "schema": {
     "type": "object",
     "properties": {
-      "apiBaseUrl": {
-        "title": "iBricks API base URL",
+      "ipAddress": {
+        "title": "Server IP Address",
+        "type": "string",
+        "required": true
+      },
+      "macAddress": {
+        "title": "Server MAC Address",
+        "type": "string",
+        "required": true
+      },
+      "broadcastAddress": {
+        "title": "Server Broadcast Address",
+        "type": "string",
+        "required": true
+      },
+      "filePath": {
+        "title": "Filepath",
         "type": "string",
         "required": true
       }
