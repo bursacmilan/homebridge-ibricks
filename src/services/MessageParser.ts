@@ -22,7 +22,7 @@ export class MessageParser {
   }
 
   public parse(data: string){
-    this.loggerService.logDebug('Parsing data: ' + data);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parse.name, `Parsing message: ${data}`);
     const splittedData = data.split('|');
 
     if(data.indexOf('YHELO') !== -1) {
@@ -36,18 +36,18 @@ export class MessageParser {
 
   // Command response
   private parseACTION_RESPONSE(data: string[]): void {
-    this.loggerService.logDebug('Parsing ACTION_RESPONSE');
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseACTION_RESPONSE.name, 'Parsing ACTION_RESPONSE');
 
     const nounce = data.filter(d => d.startsWith('N='))[1];
     const nounceSplitted = nounce.split('=');
 
-    this.loggerService.logDebug('ACTION_RESPONSE Nounce: ' + nounceSplitted[1]);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseACTION_RESPONSE.name, `Nounce: ${nounceSplitted[1]}`);
     this.udpMessageSender.removeRequestByNounce(+nounceSplitted[1]);
   }
 
   // Response from IAMMASTER (Registering device)
   private parseYHELO(data: string[]): void {
-    this.loggerService.logDebug('Parsing YHELO');
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYHELO.name, 'Parsing YHELO');
 
     let af = '';
     let ip = '';
@@ -68,13 +68,13 @@ export class MessageParser {
       }
     }
 
-    this.loggerService.logDebug('YHELO AF: ' + af + ' IP: ' + ip + ' DESC: ' + desc);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYHELO.name, `AF: ${af}, IP: ${ip}, DESC: ${desc}`);
     Cello.CreateCelloAndSafeOnFileSystem(desc, ip, af);
   }
 
   // Hardwareinfo from a device
   private parseYINFO_DebugInfo(data) {
-    this.loggerService.logDebug('Parsing YINFO_DebugInfo');
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYINFO_DebugInfo.name, 'Parsing YINFO_DebugInfo');
 
     let af = '';
     let v = '';
@@ -90,23 +90,25 @@ export class MessageParser {
       }
     }
 
-    this.loggerService.logDebug('YINFO_DebugInfo AF: ' + af + ' V: ' + v);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYINFO_DebugInfo.name, `AF: ${af}, V: ${v}`);
     const cello = Cello.GetCelloFromFile(Cello.GetFilePath(af));
     if(cello === undefined) {
-      this.loggerService.logWarning('YINFO_DebugInfo Cello with AF: ' + af + ' not found');
+      this.loggerService.logWarning(Object.getPrototypeOf(this).parseYINFO_DebugInfo.name, `Cello with AF: ${af} not found`);
       return;
     }
 
-    this.loggerService.logDebug('YINFO_DebugInfo Cello found: ' + cello.description);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYINFO_DebugInfo.name, `Cello found: ${cello.description}`);
 
     cello.hardwareInfo = this.parseAndGetHardwareInfo(v);
-    this.loggerService.logDebug('YINFO_DebugInfo Cello hardwareInfo: ' + JSON.stringify(cello.hardwareInfo));
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseYINFO_DebugInfo.name,
+      `Cello hardwareInfo: ${JSON.stringify(cello.hardwareInfo)}`);
 
     cello.SaveToFile();
   }
 
   private parseAndGetHardwareInfo(info: string): HardwareInfo {
     if(info.startsWith('S36TX')) {
+      this.loggerService.logDebug(Object.getPrototypeOf(this).parseAndGetHardwareInfo.name, 'S36TX found');
       return new HardwareInfo(1, 0, 1);
     }
 

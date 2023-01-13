@@ -21,7 +21,7 @@ export class iBricksLightPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
 
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.description);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
     // Set characteristics
     this.service.getCharacteristic(this.platform.Characteristic.On)

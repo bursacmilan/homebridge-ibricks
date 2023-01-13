@@ -17,19 +17,23 @@ export class MessageGenerator {
   }
 
   public sendIamMasterBroadcast() {
-    this.loggerService.logDebug('Sending iam master broadcast');
+    this.loggerService.logDebug(Object.getPrototypeOf(this).sendIamMasterBroadcast.name,
+      'Sending I am master broadcast');
 
     const nounce = MessageGenerator.getRandomNounce();
+
     // eslint-disable-next-line max-len
     const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=000000000000|N=${nounce}|C|YHELO|IP=${this.networkInfo.ipAddress}|MASTER=1|X=${MessageGenerator.getX()}`;
     this.udpMessageSender.sendBroadcast(message, this.networkInfo);
   }
 
   public setRelay(cello: Cello, leftRight: number, state: boolean) {
-    this.loggerService.logDebug(`Setting relay ${leftRight} to ${state} on ${cello.description}`);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).setRelay.name,
+      `Setting relay ${leftRight} to ${state} on ${cello.description}`);
 
     const nounce = MessageGenerator.getRandomNounce();
     const valueToSet = state ? 1 : 0;
+
     // eslint-disable-next-line max-len
     const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|LRSET|CH=${leftRight}|ST=${valueToSet}|X=${MessageGenerator.getX()}`;
 

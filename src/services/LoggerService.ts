@@ -7,15 +7,15 @@ export class LoggerService {
     this.logger = logger;
   }
 
-  public logDebug(message: string): void {
+  public logDebug(method: string, message: string): void {
     this.logger.log(LogLevel.INFO, message);
   }
 
-  public logError(message: string): void {
+  public logError(method: string, message: string): void {
     this.logger.log(LogLevel.ERROR, message);
   }
 
-  public logWarning(message: string): void {
+  public logWarning(method: string, message: string): void {
     this.logger.log(LogLevel.WARN, message);
   }
 }

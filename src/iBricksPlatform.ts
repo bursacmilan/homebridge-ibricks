@@ -4,13 +4,12 @@ import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
 import {iBricksLightPlatformAccessory} from './iBricksLightPlatformAccessory';
 import {Cello} from './models/Cello';
 import {DevicesService} from './services/DevicesService';
-import dgram from 'dgram';
-import console from 'console';
 import {NetworkInfo} from './models/NetworkInfo';
 import {LoggerService} from './services/LoggerService';
 import {UdpMessageSender} from './services/UdpMessageSender';
-import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
+import {MessageParser} from './services/MessageParser';
+import {UdpServer} from './services/UdpServer';
 
 export class iBricksPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -37,7 +36,6 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
   }
 
   discoverDevices(config: PlatformConfig) {
-    // Open server
     // Handler objects
     Cello.basePath = config.filePath;
     const loggerService = new LoggerService(this.log);
@@ -47,44 +45,14 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     const messageGenerator = new MessageGenerator(udpMessageSender, loggerService, networkInfo);
 
     // UDP Server
-    const server = dgram.createSocket('udp4');
-    server.on('listening', () => {
-      const address = server.address();
-      console.log(`UDP server listening on ${address.address}:${address.port}`);
-    });
-
-    server.on('message', (message, remote) => {
-      console.log(`UDP server received ${message} from ${remote.address}:${remote.port}`);
-      messageParser.parse(message.toString());
-    });
-
-    server.bind(3178, '0.0.0.0');
-
-    // Sent message controller
-    setInterval(() => {
-      loggerService.logDebug('Checking for requests without response');
-      for(const request of udpMessageSender.getRequestsWithoutResponse()) {
-        loggerService.logWarning(`Request without response found with nounce ${request.nounce}`);
-
-        request.try++;
-        if(request.try > 3) {
-          loggerService.logWarning(`Request without response with nounce ${request.nounce} has reached the maximum number of tries`);
-          udpMessageSender.removeRequest(request);
-          continue;
-        }
-
-        loggerService.logWarning(`Request without response with nounce ${request.nounce} will be sent again`);
-        request.dateTime = new Date();
-        udpMessageSender.sendMessage(request);
-      }
-    }, 500);
+    new UdpServer(loggerService, messageParser, networkInfo, udpMessageSender).startAndRun();
 
     // Send IAMMASTER
     messageGenerator.sendIamMasterBroadcast();
 
     // Relays
-    const cellos = Cello.GetAllCellosFromFiles();
-    const relays = new DevicesService(cellos).getAllRelays();
+    const cellos = Cello.GetAllCellosFromFiles(loggerService);
+    const relays = new DevicesService(cellos, loggerService).getAllRelays();
 
     for(const relay of relays) {
       const uuid = this.api.hap.uuid.generate(relay.id);
@@ -103,25 +71,6 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
     }
-
-    // Director
-    /*// eslint-disable-next-line @typescript-eslint/no-empty-function
-    const iBricksApiServiceDirector = new IBricksApiService<DirectorResponse, DirectorRequest>(this, config, 'Directors', () => { });
-
-    this.addDevices(config, 'director',
-      (platform, accessory, deviceId) =>
-        new iBricksDirectorPlatformAccessory(this, accessory, deviceId, config, iBricksApiServiceDirector));*/
-
-    // Shutter
-    /*const iBricksApiServiceShutter = new IBricksApiService<ShutterResponse, ShutterRequest>(this, config, 'Shutter',
-      (response: ShutterResponse) => {
-        response.lamellaTarget = Math.round((response.lamellaTarget / 100 * 180) - 90);
-        response.lamella = Math.round((response.lamella / 100 * 180) - 90);
-      });
-
-    this.addDevices(config, 'shutter',
-      (platform, accessory, deviceId) =>
-        new iBricksShutterPlatformAccessory(this, accessory, deviceId, config, iBricksApiServiceShutter));*/
   }
 /*
   private addDevices(config: PlatformConfig, device: string,

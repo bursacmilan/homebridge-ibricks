@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import {HardwareInfo} from './HardwareInfo';
 import path from 'path';
+import {LoggerService} from '../services/LoggerService';
 
 export class Cello {
   public static basePath = '';
@@ -55,19 +56,38 @@ export class Cello {
     return cello;
   }
 
-  public static GetAllCellosFromFiles(): Cello[] {
-    const cellos: Cello[] = [];
-    const files = fs.readdirSync(this.basePath);
+  public static GetAllCellosFromFiles(loggerService: LoggerService): Cello[] {
+    loggerService.logDebug('GetAllCellosFromFiles');
 
+    const cellos: Cello[] = [];
+    if(!fs.existsSync(this.basePath)) {
+      loggerService.logDebug('GetAllCellosFromFiles: basePath does not exist');
+      return cellos;
+    }
+
+    const files = fs.readdirSync(this.basePath);
     const jsonFiles = files.filter(file => path.extname(file) === '.json');
+
+    loggerService.logDebug(`Total files: ${files.length}`);
+
     for(const jsonFile of jsonFiles) {
-      cellos.push(Cello.GetCelloFromFile(jsonFile)!);
+      loggerService.logDebug(`GetAllCellosFromFiles: ${jsonFile}`);
+      const cello = Cello.GetCelloFromFile(path.join(this.basePath, jsonFile));
+      if(cello === undefined) {
+        continue;
+      }
+
+      cellos.push(cello);
     }
 
     return cellos;
   }
 
   public SaveToFile(): void {
+    if(!fs.existsSync(Cello.basePath)) {
+      return;
+    }
+
     if(fs.existsSync(this.filePath)) {
       fs.unlinkSync(this.filePath);
     }
