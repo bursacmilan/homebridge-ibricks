@@ -4,9 +4,7 @@ import {Request} from '../models/Request';
 import {NetworkInfo} from '../models/NetworkInfo';
 
 export class UdpMessageSender {
-
-  private loggerService: LoggerService;
-  private requests: Request[] = [];
+  private readonly loggerService: LoggerService;
 
   constructor(loggerService: LoggerService) {
     this.loggerService = loggerService;
@@ -47,7 +45,6 @@ export class UdpMessageSender {
     const client = dgram.createSocket('udp4');
     const messageBuffer = Buffer.from(request.message);
 
-    this.requests.push(request);
     client.send(messageBuffer, 0, messageBuffer.length, request.cello.port, request.cello.ip, (err) => {
       if (err) {
         this.loggerService.logError(Object.getPrototypeOf(this).sendMessage.name,
@@ -59,18 +56,5 @@ export class UdpMessageSender {
 
       client.close();
     });
-  }
-
-  public getRequestsWithoutResponse(): Request[] {
-    const dateToCheck = new Date();
-    return this.requests.filter(r => (dateToCheck.getTime() - r.dateTime.getTime()) >= 500);
-  }
-
-  public removeRequestByNounce(nounce: number) {
-    this.requests = this.requests.filter(r => r.nounce !== nounce);
-  }
-
-  public removeRequest(request: Request): void {
-    this.requests = this.requests.filter(r => r !== request);
   }
 }

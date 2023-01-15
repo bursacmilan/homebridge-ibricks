@@ -81,7 +81,7 @@ export class Cello {
 
     if (jsonObject.hardwareInfo !== undefined) {
       cello.hardwareInfo = new HardwareInfo(jsonObject.hardwareInfo.R, jsonObject.hardwareInfo.S,
-        jsonObject.hardwareInfo.H, jsonObject.hardwareInfo.D ?? 0);
+        jsonObject.hardwareInfo.H, jsonObject.hardwareInfo.D);
     }
 
     return cello;
@@ -92,7 +92,7 @@ export class Cello {
 
     const cellos: Cello[] = [];
     if (!fs.existsSync(this.basePath)) {
-      loggerService.logDebug('GetAllCellosFromFiles', 'basePath does not exist');
+      loggerService.logDebug('GetAllCellosFromFiles', `basePath ${Cello.basePath} does not exist`);
       return cellos;
     }
 

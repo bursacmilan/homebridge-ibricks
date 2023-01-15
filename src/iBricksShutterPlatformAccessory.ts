@@ -7,18 +7,18 @@ import {iBricksPlatform} from './iBricksPlatform';
 import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
-import {Shutter} from './models/Shutter';
 import {DeviceType} from './models/DeviceType';
+import {Shutter} from './devices/Shutter';
 
 export class iBricksShutterPlatformAccessory {
 
-  private service: Service;
+  private readonly service: Service;
   private currentPosition = 0;
   private targetPosition = 0;
   private positionState = 2;
   private targetLamella = 0;
   private currentLamella = 0;
-  private lamellaDisabled = false;
+  private readonly lamellaDisabled: boolean = false;
 
   constructor(
     private readonly platform: iBricksPlatform,

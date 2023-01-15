@@ -7,8 +7,8 @@ import {iBricksPlatform} from './iBricksPlatform';
 import {PlatformAccessory, Service} from 'homebridge';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
-import {Director} from './models/Director';
 import {DeviceType} from './models/DeviceType';
+import {Director} from './devices/Director';
 
 export class iBricksMeteoPlatformAccessory {
 
@@ -24,7 +24,7 @@ export class iBricksMeteoPlatformAccessory {
   ) {
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'iBricks')
-      .setCharacteristic(this.platform.Characteristic.Model, `Cello director ${this.director.leftRight === 1 ? 'Right' : 'Left'}`)
+      .setCharacteristic(this.platform.Characteristic.Model, `Cello meteo ${this.director.leftRight === 1 ? 'Right' : 'Left'}`)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, this.director.cello.mac);
 
     this.service = this.accessory.getService(this.platform.Service.TemperatureSensor) ||

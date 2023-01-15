@@ -8,14 +8,14 @@ export class LoggerService {
   }
 
   public logDebug(method: string, message: string): void {
-    this.logger.log(LogLevel.INFO, message);
+    this.logger.log(LogLevel.INFO, `${method}: ${message}`);
   }
 
   public logError(method: string, message: string): void {
-    this.logger.log(LogLevel.ERROR, message);
+    this.logger.log(LogLevel.ERROR, `${method}: ${message}`);
   }
 
   public logWarning(method: string, message: string): void {
-    this.logger.log(LogLevel.WARN, message);
+    this.logger.log(LogLevel.WARN, `${method}: ${message}`);
   }
 }

@@ -6,10 +6,10 @@ import {UdpMessageSender} from './UdpMessageSender';
 
 export class UdpServer {
 
-  private loggerService: LoggerService;
-  private messageParser: MessageParser;
-  private networkInfo: NetworkInfo;
-  private udpMessageSender: UdpMessageSender;
+  private readonly loggerService: LoggerService;
+  private readonly messageParser: MessageParser;
+  private readonly networkInfo: NetworkInfo;
+  private readonly udpMessageSender: UdpMessageSender;
 
   constructor(loggerService: LoggerService, messageParser: MessageParser, networkInfo: NetworkInfo, udpMessageSender: UdpMessageSender) {
     this.loggerService = loggerService;
@@ -34,29 +34,5 @@ export class UdpServer {
     });
 
     server.bind(3178, this.networkInfo.ipAddress);
-
-    // Sent message controller
-    /*
-    setInterval(() => {
-      for (const request of this.udpMessageSender.getRequestsWithoutResponse()) {
-        this.loggerService.logWarning('UdpServer.setInterval',
-          `Request without response found with nounce ${request.nounce}`);
-
-        request.try++;
-        if (request.try > 3) {
-          this.loggerService.logWarning('UdpServer.setInterval',
-            `Request without response with nounce ${request.nounce} has reached the maximum number of tries`);
-
-          this.udpMessageSender.removeRequest(request);
-          continue;
-        }
-
-        this.loggerService.logWarning('UdpServer.setInterval',
-          `Request without response with nounce ${request.nounce} will be sent again`);
-
-        request.dateTime = new Date();
-        this.udpMessageSender.sendMessage(request);
-      }
-    }, 500);*/
   }
 }

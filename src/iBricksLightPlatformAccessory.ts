@@ -2,7 +2,7 @@ import {Service, PlatformAccessory, CharacteristicValue} from 'homebridge';
 import {iBricksPlatform} from './iBricksPlatform';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
-import {Relay} from './models/Relay';
+import {Relay} from './devices/Relay';
 
 /**
  * Platform Accessory
@@ -13,8 +13,8 @@ export class iBricksLightPlatformAccessory {
 
   private isOn = false;
   private brightness = 0;
-  private hasDimmer = false;
-  private service: Service;
+  private readonly hasDimmer: boolean = false;
+  private readonly service: Service;
 
   constructor(
     private readonly platform: iBricksPlatform,
@@ -60,36 +60,37 @@ export class iBricksLightPlatformAccessory {
         return;
       }
 
-      if(this.hasDimmer) {
-        this.brightness = this.relay.leftRight === 1 ? cello.dimmerRight : cello.dimmerLeft;
-        this.isOn = this.brightness > 0;
+      if(!this.hasDimmer) {
+        this.isOn = this.relay.leftRight === 1 ? cello.relayRight : cello.relayLeft;
 
-        platform.log.debug(`Relay ${this.relay.name} changed to ${this.isOn ? 'on' : 'off'} and brightness ${this.brightness}`);
-
+        platform.log.debug(`Relay ${this.relay.name} changed to ${this.isOn ? 'on' : 'off'}`);
         this.service.updateCharacteristic(this.platform.Characteristic.On, this.isOn);
-        this.service.updateCharacteristic(this.platform.Characteristic.Brightness, Math.floor(this.brightness * 100));
         return;
       }
 
-      this.isOn = this.relay.leftRight === 1 ? cello.relayRight : cello.relayLeft;
+      this.brightness = this.relay.leftRight === 1 ? cello.dimmerRight : cello.dimmerLeft;
+      this.isOn = this.brightness > 0;
+
+      platform.log.debug(`Relay ${this.relay.name} changed to ${this.isOn ? 'on' : 'off'} and brightness ${this.brightness}`);
+
       this.service.updateCharacteristic(this.platform.Characteristic.On, this.isOn);
+      this.service.updateCharacteristic(this.platform.Characteristic.Brightness, Math.floor(this.brightness * 100));
     });
   }
 
   async setIsOn(value: CharacteristicValue) {
-    if(this.hasDimmer) {
+    if(!this.hasDimmer) {
       this.isOn = value as boolean;
-
-      if(this.isOn) {
-        return;
-      }
-
-      this.messageGenerator.setDimmer(this.relay.cello, this.relay.leftRight, this.isOn ? 1 : 0);
+      this.messageGenerator.setRelay(this.relay.cello, this.relay.leftRight, this.isOn);
       return;
     }
 
     this.isOn = value as boolean;
-    this.messageGenerator.setRelay(this.relay.cello, this.relay.leftRight, this.isOn);
+    if(this.isOn) {
+      return;
+    }
+
+    this.messageGenerator.setDimmer(this.relay.cello, this.relay.leftRight, this.isOn ? 1 : 0);
   }
 
   async getIsOn(): Promise<CharacteristicValue> {

@@ -1,28 +1,83 @@
 import {Cello} from '../models/Cello';
-import {Relay} from '../models/Relay';
 import {LoggerService} from './LoggerService';
-import {Shutter} from '../models/Shutter';
-import {Director} from '../models/Director';
 import {PlatformConfig} from 'homebridge';
+import {Director} from '../devices/Director';
+import {Shutter} from '../devices/Shutter';
+import {Relay} from '../devices/Relay';
+import {DeviceType} from '../models/DeviceType';
 
 export class DevicesService {
 
   private readonly cellos: Cello[];
-  private loggerService: LoggerService;
-
-  private ignoredDevices: { mac: string; channel: number; deviceType: string }[] = [];
+  private readonly loggerService: LoggerService;
+  private readonly ignoredDevices: { mac: string; channel: number; deviceType: string }[] = [];
 
   constructor(cellos: Cello[], loggerService: LoggerService, config: PlatformConfig) {
     this.cellos = cellos;
     this.loggerService = loggerService;
+    this.initIgnoredDevices(config, loggerService);
+  }
 
+  public getAllMeteos(): Director[] {
+    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllMeteos.name,
+      `Getting all meteos from total of ${this.cellos.length} cellos`);
+
+    const directors = this.getAllDirectors(false);
+    for (const director of directors) {
+      director.id = director.id.replace('DIRECTOR', 'METEO');
+    }
+
+    return directors.filter(d => !this.isDisabled(d.mac, d.leftRight, 'meteo'));
+  }
+
+  public getAllDirectors(filterDisabled: boolean): Director[] {
+    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllShutters.name,
+      `Getting all directors from total of ${this.cellos.length} cellos`);
+
+    const directors = this.getAllOfT<Director>((cello, leftRight) =>
+      new Shutter(this.getDirectorId(cello, leftRight), cello.mac,
+        `${cello.description} - ${leftRight === 1 ? 'Right' : 'Left'}`,
+        leftRight, cello), DeviceType.Director, 'H');
+
+    if (!filterDisabled) {
+      return directors;
+    }
+
+    return directors.filter(d => !this.isDisabled(d.mac, d.leftRight, 'director'));
+  }
+
+  public getAllShutters(): Shutter[] {
+    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllShutters.name,
+      `Getting all shutters from total of ${this.cellos.length} cellos`);
+
+    const shutters = this.getAllOfT<Shutter>((cello, leftRight) =>
+      new Shutter(this.getShutterId(cello, leftRight), cello.mac,
+        `${cello.description} - ${leftRight === 1 ? 'Right' : 'Left'}`,
+        leftRight, cello), DeviceType.Shutter, 'S');
+
+    return shutters.filter(d => !this.isDisabled(d.mac, d.leftRight, 'shutter'));
+  }
+
+  public getAllRelays(): Relay[] {
+    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllRelays.name,
+      `Getting all relays from total of ${this.cellos.length} cellos`);
+
+    const relays = this.getAllOfT<Relay>((cello, leftRight) =>
+      new Relay(this.getRelayId(cello, leftRight), cello.mac,
+        `${cello.description} - ${leftRight === 1 ? 'Right' : 'Left'}`,
+        leftRight, cello), DeviceType.Relay, 'R');
+
+    return relays.filter(d => !this.isDisabled(d.mac, d.leftRight, 'relay'));
+  }
+
+  private initIgnoredDevices(config: PlatformConfig, loggerService: LoggerService) {
     if (!config.ignoreDevices) {
       return;
     }
 
     for (const ignoredDevice of config.ignoreDevices) {
       const mac = ignoredDevice.macAddress;
-      for(const childDevice of ignoredDevice.childDevices) {
+      for (const childDevice of ignoredDevice.childDevices) {
         const channel = childDevice.channel as number;
         const deviceType = childDevice.deviceType as string;
 
@@ -33,94 +88,30 @@ export class DevicesService {
     loggerService.logDebug('DevicesService', `Ignored devices: ${JSON.stringify(this.ignoredDevices)}`);
   }
 
-  public getAllMeteos(): Director[] {
-    const directors = this.getAllDirectors(false);
-    for (const director of directors) {
-      director.id = director.id.replace('DIRECTOR', 'METEO');
-    }
+  private getAllOfT<T>(factory: (cello: Cello, leftRight: number) => T, deviceType: DeviceType, hardwareInfoProperty: string): T[] {
+    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name,
+      `Getting all ${deviceType} from total of ${this.cellos.length} cellos`);
 
-    return directors.filter(d => !this.isDisabled(d.mac, d.leftRight, 'meteo'));
-  }
-
-  public getAllDirectors(filterDisabled: boolean): Director[] {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllDirectors.name,
-      `Getting all directors from total of ${this.cellos.length} cellos`);
-
-    const directors: Director[] = [];
-    for(const cello of this.cellos) {
-      if(cello.hardwareInfo === undefined) {
-        this.loggerService.logWarning(Object.getPrototypeOf(this).getAllDirectors.name,
+    const devices: T[] = [];
+    for (const cello of this.cellos) {
+      if (cello.hardwareInfo === undefined) {
+        this.loggerService.logWarning(Object.getPrototypeOf(this).getAllOfT.name,
           `Cello ${cello.mac} has no hardware info`);
 
         continue;
       }
 
-      if(cello.hardwareInfo.H === 2) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllDirectors.name, `Cello ${cello.description} has 2 directors`);
-        directors.push(new Director(this.getDirectorId(cello, 1), cello.mac, `${cello.description} - Right`, 1, cello));
-        directors.push(new Director(this.getDirectorId(cello, 2), cello.mac, `${cello.description} - Left`, 2, cello));
-      } else if(cello.hardwareInfo.H === 1) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllDirectors.name, `Cello ${cello.description} has 1 director`);
-        directors.push(new Director(this.getDirectorId(cello, 1), cello.mac, `${cello.description}`, 1, cello));
+      if (cello.hardwareInfo[hardwareInfoProperty] as number === 2) {
+        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name, `Cello ${cello.description} has 2 ${deviceType}s`);
+        devices.push(factory(cello, 1));
+        devices.push(factory(cello, 2));
+      } else if (cello.hardwareInfo.S === 1) {
+        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name, `Cello ${cello.description} has 1 ${deviceType}`);
+        devices.push(factory(cello, 1));
       }
     }
 
-    if(!filterDisabled) {
-      return directors;
-    }
-    return directors.filter(d => !this.isDisabled(d.mac, d.leftRight, 'director'));
-  }
-
-  public getAllShutters(): Shutter[] {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllShutters.name,
-      `Getting all shutters from total of ${this.cellos.length} cellos`);
-
-    const shutters: Shutter[] = [];
-    for(const cello of this.cellos) {
-      if(cello.hardwareInfo === undefined) {
-        this.loggerService.logWarning(Object.getPrototypeOf(this).getAllShutters.name,
-          `Cello ${cello.mac} has no hardware info`);
-
-        continue;
-      }
-
-      if(cello.hardwareInfo.S === 2) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllShutters.name, `Cello ${cello.description} has 2 shutters`);
-        shutters.push(new Shutter(this.getShutterId(cello, 1), cello.mac, `${cello.description} - Right`, 1, cello));
-        shutters.push(new Shutter(this.getShutterId(cello, 2), cello.mac, `${cello.description} - Left`, 2, cello));
-      } else if(cello.hardwareInfo.S === 1) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllShutters.name, `Cello ${cello.description} has 1 shutter`);
-        shutters.push(new Shutter(this.getShutterId(cello, 1), cello.mac, `${cello.description}`, 1, cello));
-      }
-    }
-
-    return shutters.filter(d => !this.isDisabled(d.mac, d.leftRight, 'shutter'));
-  }
-
-  public getAllRelays(): Relay[] {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).getAllRelays.name,
-      `Getting all relays from total of ${this.cellos.length} cellos`);
-
-    const relays: Relay[] = [];
-    for(const cello of this.cellos) {
-      if(cello.hardwareInfo === undefined) {
-        this.loggerService.logWarning(Object.getPrototypeOf(this).getAllRelays.name,
-          `Cello ${cello.mac} has no hardware info`);
-
-        continue;
-      }
-
-      if(cello.hardwareInfo.R === 2) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllRelays.name, `Cello ${cello.description} has 2 relays`);
-        relays.push(new Relay(this.getRelayId(cello, 1), cello.mac, `${cello.description} - Right`, 1, cello));
-        relays.push(new Relay(this.getRelayId(cello, 2), cello.mac, `${cello.description} - Left`, 2, cello));
-      } else if(cello.hardwareInfo.R === 1) {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllRelays.name, `Cello ${cello.description} has 1 relays`);
-        relays.push(new Relay(this.getRelayId(cello, 1), cello.mac, `${cello.description}`, 1, cello));
-      }
-    }
-
-    return relays.filter(d => !this.isDisabled(d.mac, d.leftRight, 'relay'));
+    return devices;
   }
 
   private getRelayId(cello: Cello, leftRight: number): string {

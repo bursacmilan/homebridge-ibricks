@@ -20,11 +20,6 @@
         "type": "string",
         "required": true
       },
-      "filePath": {
-        "title": "Filepath",
-        "type": "string",
-        "required": true
-      },
       "disableLamella": {
         "title": "Disable Lamella",
         "type": "array",

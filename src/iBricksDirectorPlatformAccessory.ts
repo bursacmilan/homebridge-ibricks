@@ -7,12 +7,12 @@ import {iBricksPlatform} from './iBricksPlatform';
 import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
-import {Director} from './models/Director';
 import {DeviceType} from './models/DeviceType';
+import {Director} from './devices/Director';
 
 export class iBricksDirectorPlatformAccessory {
 
-  private service: Service;
+  private readonly service: Service;
   private currentTemperature = 0;
   private targetTemperature = 0;
 
@@ -53,6 +53,7 @@ export class iBricksDirectorPlatformAccessory {
     // Set initial state
     this.currentTemperature = this.director.leftRight === 1 ?
       this.director.cello.currentTemperatureRight : this.director.cello.currentTemperatureLeft;
+
     this.targetTemperature = this.director.leftRight === 1 ?
       this.director.cello.targetTemperatureRight : this.director.cello.targetTemperatureLeft;
 
@@ -65,6 +66,7 @@ export class iBricksDirectorPlatformAccessory {
 
       this.currentTemperature = this.director.leftRight === 1 ?
         celloEvent.cello.currentTemperatureRight : celloEvent.cello.currentTemperatureLeft;
+
       this.targetTemperature = this.director.leftRight === 1 ?
         celloEvent.cello.targetTemperatureRight : celloEvent.cello.targetTemperatureLeft;
 

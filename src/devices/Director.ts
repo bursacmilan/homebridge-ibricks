@@ -1,5 +1,5 @@
 import {Device} from './Device';
-import {Cello} from './Cello';
+import {Cello} from '../models/Cello';
 
 export class Director extends Device {
   public leftRight: number;

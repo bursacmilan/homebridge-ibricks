@@ -1,4 +1,4 @@
-import {Cello} from './Cello';
+import {Cello} from '../models/Cello';
 
 export class Device {
   public id: string;

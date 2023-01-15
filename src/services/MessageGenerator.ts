@@ -6,9 +6,9 @@ import {Request} from '../models/Request';
 
 export class MessageGenerator {
 
-  private udpMessageSender: UdpMessageSender;
-  private loggerService: LoggerService;
-  private networkInfo: NetworkInfo;
+  private readonly udpMessageSender: UdpMessageSender;
+  private readonly loggerService: LoggerService;
+  private readonly networkInfo: NetworkInfo;
 
   constructor(udpMessageSender: UdpMessageSender, loggerService: LoggerService, networkInfo: NetworkInfo) {
     this.udpMessageSender = udpMessageSender;
@@ -16,6 +16,7 @@ export class MessageGenerator {
     this.loggerService = loggerService;
   }
 
+  //.KISS|AF=989096BE40C7|AT=000000000000|N=1149760|C|YHELO|IP=192.168.3.84|MASTER=1
   public sendIamMasterBroadcast() {
     this.loggerService.logDebug(Object.getPrototypeOf(this).sendIamMasterBroadcast.name,
       'Sending I am master broadcast');
@@ -41,6 +42,7 @@ export class MessageGenerator {
     this.udpMessageSender.sendMessage(request);
   }
 
+  // .KISS|AF=989096BE40C7|AT=8CAAB5FAABBE|N=3677560|C|LRSET|CH=1|ST=1
   public setRelay(cello: Cello, leftRight: number, state: boolean) {
     this.loggerService.logDebug(Object.getPrototypeOf(this).setRelay.name,
       `Setting relay ${leftRight} to ${state} on ${cello.description}`);
