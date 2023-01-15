@@ -4,17 +4,16 @@
  * Each accessory may expose multiple services of different service types.
  */
 import {iBricksPlatform} from './iBricksPlatform';
-import {CharacteristicValue, PlatformAccessory, Service} from 'homebridge';
+import {PlatformAccessory, Service} from 'homebridge';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
 import {Director} from './models/Director';
 import {DeviceType} from './models/DeviceType';
 
-export class iBricksDirectorPlatformAccessory {
+export class iBricksMeteoPlatformAccessory {
 
   private service: Service;
   private currentTemperature = 0;
-  private targetTemperature = 0;
 
   constructor(
     private readonly platform: iBricksPlatform,
@@ -28,8 +27,8 @@ export class iBricksDirectorPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.Model, `Cello director ${this.director.leftRight === 1 ? 'Right' : 'Left'}`)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, this.director.cello.mac);
 
-    this.service = this.accessory.getService(this.platform.Service.Thermostat) ||
-      this.accessory.addService(this.platform.Service.Thermostat);
+    this.service = this.accessory.getService(this.platform.Service.TemperatureSensor) ||
+      this.accessory.addService(this.platform.Service.TemperatureSensor);
 
     this.service.setCharacteristic(this.platform.Characteristic.Name, director.name);
 
@@ -37,24 +36,9 @@ export class iBricksDirectorPlatformAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits)
-      .onGet((() => 0));
-
-    this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
-      .onSet(this.setTargetTemperature.bind(this))
-      .onGet(this.getTargetTemperature.bind(this));
-
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState)
-      .onGet((() => 3));
-
-    this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
-      .onGet((() => 3));
-
     // Set initial state
     this.currentTemperature = this.director.leftRight === 1 ?
       this.director.cello.currentTemperatureRight : this.director.cello.currentTemperatureLeft;
-    this.targetTemperature = this.director.leftRight === 1 ?
-      this.director.cello.targetTemperatureRight : this.director.cello.targetTemperatureLeft;
 
     // Subscribe to changes
     this.messageParser.celloEvent.subscribe((celloEvent) => {
@@ -65,30 +49,12 @@ export class iBricksDirectorPlatformAccessory {
 
       this.currentTemperature = this.director.leftRight === 1 ?
         celloEvent.cello.currentTemperatureRight : celloEvent.cello.currentTemperatureLeft;
-      this.targetTemperature = this.director.leftRight === 1 ?
-        celloEvent.cello.targetTemperatureRight : celloEvent.cello.targetTemperatureLeft;
 
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.currentTemperature);
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, this.targetTemperature);
     });
-
-    // Interval updates
-    setInterval(() => {
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState, 3);
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, 3);
-    }, 1500);
   }
 
   private getCurrentTemperature(): number {
     return this.currentTemperature;
-  }
-
-  private getTargetTemperature(): number {
-    return this.targetTemperature;
-  }
-
-  private setTargetTemperature(value: CharacteristicValue): void {
-    this.targetTemperature = value as number;
-    this.messageGenerator.setDirector(this.director.cello, this.director.leftRight, value as number);
   }
 }

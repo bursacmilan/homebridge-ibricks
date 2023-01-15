@@ -13,6 +13,24 @@ export class Cello {
   public filePath: string;
   public hardwareInfo?: HardwareInfo;
 
+  // Devices info
+  public relayLeft = false;
+  public relayRight = false;
+
+  public dimmerLeft = 0;
+  public dimmerRight = 0;
+
+  public shutterLeft = 0;
+  public shutterRight = 0;
+
+  public lamellaLeft = 0;
+  public lamellaRight = 0;
+
+  public currentTemperatureLeft = 10;
+  public currentTemperatureRight = 10;
+  public targetTemperatureLeft = 0;
+  public targetTemperatureRight = 0;
+
   constructor(description: string, ip: string, mac: string) {
     this.description = description;
     this.ip = ip;
@@ -23,7 +41,7 @@ export class Cello {
   public static CreateCelloAndSafeOnFileSystem(description: string, ip: string, mac: string): Cello {
     let cello = Cello.GetCelloFromFile(this.GetFilePath(mac));
 
-    if(cello !== undefined) {
+    if (cello !== undefined) {
       cello.ip = ip;
       cello.description = description;
     } else {
@@ -39,7 +57,7 @@ export class Cello {
   }
 
   public static GetCelloFromFile(filePath: string): Cello | undefined {
-    if(!fs.existsSync(filePath)) {
+    if (!fs.existsSync(filePath)) {
       return undefined;
     }
 
@@ -48,32 +66,45 @@ export class Cello {
 
     const cello = new Cello(jsonObject.description, jsonObject.ip, jsonObject.mac);
     cello.port = jsonObject.port;
+    cello.relayLeft = jsonObject.relayLeft ?? false;
+    cello.relayRight = jsonObject.relayRight ?? false;
+    cello.dimmerLeft = jsonObject.dimmerLeft ?? 0;
+    cello.dimmerRight = jsonObject.dimmerRight ?? 0;
+    cello.shutterRight = jsonObject.shutterRight ?? 0;
+    cello.shutterLeft = jsonObject.shutterLeft ?? 0;
+    cello.lamellaLeft = jsonObject.lamellaLeft ?? 0;
+    cello.lamellaRight = jsonObject.lamellaRight ?? 0;
+    cello.currentTemperatureLeft = jsonObject.currentTemperatureLeft ?? 0;
+    cello.currentTemperatureRight = jsonObject.currentTemperatureRight ?? 0;
+    cello.targetTemperatureLeft = jsonObject.targetTemperatureLeft ?? 0;
+    cello.targetTemperatureRight = jsonObject.targetTemperatureRight ?? 0;
 
-    if(jsonObject.hardwareInfo !== undefined) {
-      cello.hardwareInfo = new HardwareInfo(jsonObject.hardwareInfo.R, jsonObject.hardwareInfo.S, jsonObject.hardwareInfo.H);
+    if (jsonObject.hardwareInfo !== undefined) {
+      cello.hardwareInfo = new HardwareInfo(jsonObject.hardwareInfo.R, jsonObject.hardwareInfo.S,
+        jsonObject.hardwareInfo.H, jsonObject.hardwareInfo.D ?? 0);
     }
 
     return cello;
   }
 
   public static GetAllCellosFromFiles(loggerService: LoggerService): Cello[] {
-    loggerService.logDebug('GetAllCellosFromFiles');
+    loggerService.logDebug('GetAllCellosFromFiles', 'GetAllCellosFromFiles');
 
     const cellos: Cello[] = [];
-    if(!fs.existsSync(this.basePath)) {
-      loggerService.logDebug('GetAllCellosFromFiles: basePath does not exist');
+    if (!fs.existsSync(this.basePath)) {
+      loggerService.logDebug('GetAllCellosFromFiles', 'basePath does not exist');
       return cellos;
     }
 
     const files = fs.readdirSync(this.basePath);
     const jsonFiles = files.filter(file => path.extname(file) === '.json');
 
-    loggerService.logDebug(`Total files: ${files.length}`);
+    loggerService.logDebug('GetAllCellosFromFiles', `Total files: ${files.length}`);
 
-    for(const jsonFile of jsonFiles) {
-      loggerService.logDebug(`GetAllCellosFromFiles: ${jsonFile}`);
+    for (const jsonFile of jsonFiles) {
+      loggerService.logDebug('GetAllCellosFromFiles', `${jsonFile}`);
       const cello = Cello.GetCelloFromFile(path.join(this.basePath, jsonFile));
-      if(cello === undefined) {
+      if (cello === undefined) {
         continue;
       }
 
@@ -84,11 +115,11 @@ export class Cello {
   }
 
   public SaveToFile(): void {
-    if(!fs.existsSync(Cello.basePath)) {
+    if (!fs.existsSync(Cello.basePath)) {
       return;
     }
 
-    if(fs.existsSync(this.filePath)) {
+    if (fs.existsSync(this.filePath)) {
       fs.unlinkSync(this.filePath);
     }
 

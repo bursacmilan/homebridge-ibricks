@@ -24,6 +24,59 @@
         "title": "Filepath",
         "type": "string",
         "required": true
+      },
+      "disableLamella": {
+        "title": "Disable Lamella",
+        "type": "array",
+        "items": {
+          "title": "Mac Address",
+          "type": "string"
+        }
+      },
+      "reboot": {
+        "title": "Reboot",
+        "type": "boolean",
+        "required": false
+      },
+      "ignoreDevices": {
+        "title": "Ignore devices",
+        "type": "array",
+        "items": {
+          "title": "Device",
+          "type": "object",
+          "properties": {
+            "macAddress": {
+              "title": "Mac address",
+              "type": "string"
+            },
+            "childDevices": {
+              "title": "Child devices",
+              "type": "array",
+              "items": {
+                "title": "Child device",
+                "type": "object",
+                "properties": {
+                  "channel": {
+                    "title": "Channel",
+                    "type": "number",
+                    "required": true
+                  },
+                  "deviceType": {
+                    "title": "Device type",
+                    "type": "string",
+                    "default": "relay",
+                    "oneOf": [
+                      { "title":  "Relay", "enum": [ "relay" ] },
+                      { "title":  "Shutter", "enum": [ "shutter" ] },
+                      { "title":  "Director", "enum": [ "director" ] },
+                      { "title":  "Meteo", "enum": [ "meteo" ] }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

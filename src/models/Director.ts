@@ -1,7 +1,7 @@
 import {Device} from './Device';
 import {Cello} from './Cello';
 
-export class Relay extends Device {
+export class Director extends Device {
   public leftRight: number;
 
   constructor(id: string, mac: string, name: string, leftRight: number, cello: Cello) {

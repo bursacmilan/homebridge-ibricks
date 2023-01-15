@@ -36,6 +36,7 @@ export class UdpServer {
     server.bind(3178, this.networkInfo.ipAddress);
 
     // Sent message controller
+    /*
     setInterval(() => {
       for (const request of this.udpMessageSender.getRequestsWithoutResponse()) {
         this.loggerService.logWarning('UdpServer.setInterval',
@@ -56,6 +57,6 @@ export class UdpServer {
         request.dateTime = new Date();
         this.udpMessageSender.sendMessage(request);
       }
-    }, 500);
+    }, 500);*/
   }
 }
