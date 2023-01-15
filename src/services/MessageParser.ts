@@ -66,7 +66,7 @@ export class MessageParser {
       }
     }
 
-    this.loggerService.logWarning(Object.getPrototypeOf(this).parseDIRECTOR_CHANGE.name,
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseDIRECTOR_CHANGE.name,
       `AF: ${af} CH: ${ch} current: ${current} target: ${target}`);
 
     this.updateCello(af, cello => {
@@ -128,7 +128,7 @@ export class MessageParser {
       }
     }
 
-    this.loggerService.logWarning(Object.getPrototypeOf(this).parseSHUTTER_CHANGE.name,
+    this.loggerService.logDebug(Object.getPrototypeOf(this).parseSHUTTER_CHANGE.name,
       `AF: ${af} H: ${h} CH: ${ch} CMD: ${cmd}`);
 
     if (cmd === 'UP' || cmd === 'DN') {
@@ -183,7 +183,7 @@ export class MessageParser {
       }
     }
 
-    this.loggerService.logWarning('RELAY', `AF: ${af} ST: ${st} CH: ${ch} V: ${v}`);
+    this.loggerService.logDebug('RELAY', `AF: ${af} ST: ${st} CH: ${ch} V: ${v}`);
 
     this.updateCello(af, cello => {
       if (ch === '1') {

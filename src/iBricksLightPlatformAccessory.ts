@@ -41,6 +41,7 @@ export class iBricksLightPlatformAccessory {
       .onGet(this.getIsOn.bind(this));
 
     if(this.hasDimmer) {
+      this.platform.log.info(`Cello ${this.relay.cello.mac} has dimmer`);
       this.service.getCharacteristic(this.platform.Characteristic.Brightness)
         .onSet(this.setBrightness.bind(this))
         .onGet(this.getBrightness.bind(this));
