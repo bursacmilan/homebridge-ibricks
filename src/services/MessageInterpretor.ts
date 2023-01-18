@@ -55,6 +55,8 @@ export class MessageInterpretor {
           default:
             additionalData.set(keyValue[0], keyValue[1]);
         }
+      } else if (keyValue.length > 2) {
+        additionalData.set(keyValue[0], keyValue.slice(1).join('='));
       } else {
         switch (messagePart) {
           case '.KISS':
