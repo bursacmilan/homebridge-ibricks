@@ -178,10 +178,10 @@ export class MessageParser {
   }
 
   private parseAndGetHardwareInfo(info: string): HardwareInfo {
-    if (info.startsWith('S36TX')) {
+    if (info.indexOf('S36TX') !== -1) {
       this.loggerService.logDebug(Object.getPrototypeOf(this).parseAndGetHardwareInfo.name, 'S36TX found');
       return new HardwareInfo(1, 0, 1, 0);
-    } else if (info.startsWith('DIM_GL')) {
+    } else if (info.indexOf('DIM_GL') !== -1) {
       this.loggerService.logDebug(Object.getPrototypeOf(this).parseAndGetHardwareInfo.name, 'DIM_GL found');
       return new HardwareInfo(1, 0, 0, 1);
     }
