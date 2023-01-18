@@ -3,6 +3,7 @@ import {LoggerService} from './LoggerService';
 import {Cello} from '../models/Cello';
 import {NetworkInfo} from '../models/NetworkInfo';
 import {Request} from '../models/Request';
+import {Message} from '../models/Message';
 
 export class MessageGenerator {
 
@@ -21,10 +22,20 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).sendIamMasterBroadcast.name,
       'Sending I am master broadcast');
 
-    const nounce = MessageGenerator.getRandomNounce();
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      '000000000000',
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'YHELO',
+      '',
+      new Map<string, string>(
+        [
+          ['IP', this.networkInfo.ipAddress],
+          ['MASTER', '1'],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=000000000000|N=${nounce}|C|YHELO|IP=${this.networkInfo.ipAddress}|MASTER=1|X=${MessageGenerator.getX()}`;
     this.udpMessageSender.sendBroadcast(message, this.networkInfo);
   }
 
@@ -33,13 +44,20 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).setDimmer.name,
       `Setting dimmer ${leftRight} to ${state} on ${cello.description}`);
 
-    const nounce = MessageGenerator.getRandomNounce();
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      cello.mac,
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'LDSET',
+      leftRight.toString(),
+      new Map<string, string>(
+        [
+          ['V', state.toString()],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|LDSET|CH=${leftRight}|V=${state}|X=${MessageGenerator.getX()}`;
-
-    const request = new Request(message, nounce, cello, this.networkInfo);
-    this.udpMessageSender.sendMessage(request);
+    this.udpMessageSender.sendMessage(new Request(message, cello));
   }
 
   // .KISS|AF=989096BE40C7|AT=8CAAB5FAABBE|N=3677560|C|LRSET|CH=1|ST=1
@@ -47,14 +65,21 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).setRelay.name,
       `Setting relay ${leftRight} to ${state} on ${cello.description}`);
 
-    const nounce = MessageGenerator.getRandomNounce();
     const valueToSet = state ? 1 : 0;
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      cello.mac,
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'LRSET',
+      leftRight.toString(),
+      new Map<string, string>(
+        [
+          ['ST', valueToSet.toString()],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|LRSET|CH=${leftRight}|ST=${valueToSet}|X=${MessageGenerator.getX()}`;
-
-    const request = new Request(message, nounce, cello, this.networkInfo);
-    this.udpMessageSender.sendMessage(request);
+    this.udpMessageSender.sendMessage(new Request(message, cello));
   }
 
   //.KISS|AF=989096BE40C7|AT=8CAAB5FA31EC|N=6206168|C|YSCFG|CFG=Reboot|V=0
@@ -62,13 +87,21 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).rebootCello.name,
       `Rebooting cello ${cello.description}`);
 
-    const nounce = MessageGenerator.getRandomNounce();
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      cello.mac,
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'YSCFG',
+      '',
+      new Map<string, string>(
+        [
+          ['CFG', 'Reboot'],
+          ['V', '0'],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|YSCFG|CFG=Reboot|V=0|X=${MessageGenerator.getX()}`;
-
-    const request = new Request(message, nounce, cello, this.networkInfo);
-    this.udpMessageSender.sendMessage(request);
+    this.udpMessageSender.sendMessage(new Request(message, cello));
   }
 
   // .KISS|AF=989096BE40C7|AT=8CAAB5FA2BB5|N=6206166|C|BDSET|CH=1|U=CEL|V=23
@@ -76,13 +109,21 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).setDirector.name,
       `Setting director ${leftRight} to ${state} on ${cello.description}`);
 
-    const nounce = MessageGenerator.getRandomNounce();
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      cello.mac,
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'BDSET',
+      leftRight.toString(),
+      new Map<string, string>(
+        [
+          ['U', 'CEL'],
+          ['V', state.toString()],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|BDSET|CH=${leftRight}|U=CEL|V=${state}|X=${MessageGenerator.getX()}`;
-
-    const request = new Request(message, nounce, cello, this.networkInfo);
-    this.udpMessageSender.sendMessage(request);
+    this.udpMessageSender.sendMessage(new Request(message, cello));
   }
 
   // .KISS|AF=989096BE40C7|AT=8CAAB5FA2BB5|N=2264766|C|ASSET|CH=1|CMD=HL|H=0|L=-1.000
@@ -90,18 +131,28 @@ export class MessageGenerator {
     this.loggerService.logDebug(Object.getPrototypeOf(this).setShutter.name,
       `Setting shutter ${leftRight} to shutter ${shutter}, lamella ${lamella} on ${cello.description}`);
 
-    const nounce = MessageGenerator.getRandomNounce();
     const shutterToSet = shutter === -1 ? -1 : shutter;
     const lamellaToSet = lamella === -1 ? -1 : lamella;
 
-    // eslint-disable-next-line max-len
-    const message = `.KISS|AF=${this.networkInfo.macAddress}|AT=${cello.mac}|N=${nounce}|C|ASSET|CH=${leftRight}|CMD=HL|H=${shutterToSet}|L=${lamellaToSet}|X=${MessageGenerator.getX()}`;
+    const message = new Message('.KISS',
+      this.networkInfo.macAddress,
+      cello.mac,
+      MessageGenerator.getRandomNonce().toString(),
+      'C',
+      'ASSET',
+      leftRight.toString(),
+      new Map<string, string>(
+        [
+          ['CMD', 'HL'],
+          ['H', shutterToSet.toString()],
+          ['L', lamellaToSet.toString()],
+          ['X', MessageGenerator.getX()],
+        ]));
 
-    const request = new Request(message, nounce, cello, this.networkInfo);
-    this.udpMessageSender.sendMessage(request);
+    this.udpMessageSender.sendMessage(new Request(message, cello));
   }
 
-  private static getRandomNounce(): number {
+  private static getRandomNonce(): number {
     return Math.floor(Math.random() * (999999 - 100 + 1)) + 100;
   }
 

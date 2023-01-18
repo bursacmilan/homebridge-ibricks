@@ -2,6 +2,7 @@ import * as dgram from 'dgram';
 import {LoggerService} from './LoggerService';
 import {Request} from '../models/Request';
 import {NetworkInfo} from '../models/NetworkInfo';
+import {Message} from '../models/Message';
 
 export class UdpMessageSender {
   private readonly loggerService: LoggerService;
@@ -10,9 +11,9 @@ export class UdpMessageSender {
     this.loggerService = loggerService;
   }
 
-  public sendBroadcast(message: string, networkInfo: NetworkInfo): void {
+  public sendBroadcast(message: Message, networkInfo: NetworkInfo): void {
     this.loggerService.logDebug(Object.getPrototypeOf(this).sendBroadcast.name,
-      `Sending broadcast message: ${message} to ${networkInfo.broadcastAddress}`);
+      `Sending broadcast message: ${message.getMessageAsString()} to ${networkInfo.broadcastAddress}`);
 
     const client = dgram.createSocket('udp4');
     client.bind(3178, networkInfo.broadcastAddress);
@@ -23,7 +24,7 @@ export class UdpMessageSender {
       this.loggerService.logDebug(Object.getPrototypeOf(this).sendBroadcast.name,
         `UDP client listening on ${address.address}:${address.port}`);
 
-      const messageBuffer = Buffer.from(message);
+      const messageBuffer = Buffer.from(message.getMessageAsString());
       client.send(messageBuffer, 0, messageBuffer.length, 3178, networkInfo.broadcastAddress, (err) => {
         if (err) {
           this.loggerService.logError(Object.getPrototypeOf(this).sendBroadcast.name,
@@ -39,11 +40,11 @@ export class UdpMessageSender {
   }
 
   public sendMessage(request: Request): void {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).sendMessage.name, `Sending message to ${request.cello.description} 
-      with nounce ${request.nounce} and message ${request.message}`);
+    this.loggerService.logDebug(Object.getPrototypeOf(this).sendMessage.name,
+      `Sending message to ${request.cello.description} with message ${request.message.getMessageAsString()}`);
 
     const client = dgram.createSocket('udp4');
-    const messageBuffer = Buffer.from(request.message);
+    const messageBuffer = Buffer.from(request.message.getMessageAsString());
 
     client.send(messageBuffer, 0, messageBuffer.length, request.cello.port, request.cello.ip, (err) => {
       if (err) {

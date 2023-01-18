@@ -33,6 +33,17 @@
         "type": "boolean",
         "required": false
       },
+      "directorTargetHeatingCoolingState": {
+        "title": "Director Target Heating Cooling State",
+        "type": "string",
+        "default": "relay",
+        "oneOf": [
+          { "title":  "Off", "enum": [ "Off" ] },
+          { "title":  "Heat", "enum": [ "Heat" ] },
+          { "title":  "Cool", "enum": [ "Cool" ] },
+          { "title":  "Auto", "enum": [ "Auto" ] }
+        ]
+      },
       "ignoreDevices": {
         "title": "Ignore devices",
         "type": "array",

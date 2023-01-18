@@ -3,6 +3,7 @@ import {iBricksPlatform} from './iBricksPlatform';
 import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
 import {Relay} from './devices/Relay';
+import {DeviceType} from './models/DeviceType';
 
 /**
  * Platform Accessory
@@ -31,7 +32,7 @@ export class iBricksLightPlatformAccessory {
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.relay.name);
 
-    if(this.relay.cello.hardwareInfo && this.relay.cello.hardwareInfo.D > 0) {
+    if (this.relay.cello.hardwareInfo && this.relay.cello.hardwareInfo.D > 0) {
       this.hasDimmer = true;
     }
 
@@ -40,7 +41,7 @@ export class iBricksLightPlatformAccessory {
       .onSet(this.setIsOn.bind(this))
       .onGet(this.getIsOn.bind(this));
 
-    if(this.hasDimmer) {
+    if (this.hasDimmer) {
       this.platform.log.info(`Cello ${this.relay.cello.mac} has dimmer`);
       this.service.getCharacteristic(this.platform.Characteristic.Brightness)
         .onSet(this.setBrightness.bind(this))
@@ -48,7 +49,7 @@ export class iBricksLightPlatformAccessory {
     }
 
     // Set initial state
-    if(!this.hasDimmer) {
+    if (!this.hasDimmer) {
       this.isOn = this.relay.leftRight === 1 ? this.relay.cello.relayRight : this.relay.cello.relayLeft;
     } else {
       this.brightness = this.relay.leftRight === 1 ? this.relay.cello.dimmerRight : this.relay.cello.dimmerLeft;
@@ -56,20 +57,21 @@ export class iBricksLightPlatformAccessory {
     }
 
     // Subscribe to changes
-    messageParser.celloChangedEvent.subscribe((cello) => {
-      if (cello.mac !== this.accessory.context.device.mac) {
+    messageParser.celloEvent.subscribe((celloEvent) => {
+      if (celloEvent.deviceType !== DeviceType.Relay ||
+        celloEvent.cello.mac !== this.relay.mac || celloEvent.leftRight !== this.relay.leftRight) {
         return;
       }
 
-      if(!this.hasDimmer) {
-        this.isOn = this.relay.leftRight === 1 ? cello.relayRight : cello.relayLeft;
+      if (!this.hasDimmer) {
+        this.isOn = this.relay.leftRight === 1 ? celloEvent.cello.relayRight : celloEvent.cello.relayLeft;
 
         platform.log.debug(`Relay ${this.relay.name} changed to ${this.isOn ? 'on' : 'off'}`);
         this.service.updateCharacteristic(this.platform.Characteristic.On, this.isOn);
         return;
       }
 
-      this.brightness = this.relay.leftRight === 1 ? cello.dimmerRight : cello.dimmerLeft;
+      this.brightness = this.relay.leftRight === 1 ? celloEvent.cello.dimmerRight : celloEvent.cello.dimmerLeft;
       this.isOn = this.brightness > 0;
 
       platform.log.debug(`Relay ${this.relay.name} changed to ${this.isOn ? 'on' : 'off'} and brightness ${this.brightness}`);
@@ -80,14 +82,14 @@ export class iBricksLightPlatformAccessory {
   }
 
   async setIsOn(value: CharacteristicValue) {
-    if(!this.hasDimmer) {
+    if (!this.hasDimmer) {
       this.isOn = value as boolean;
       this.messageGenerator.setRelay(this.relay.cello, this.relay.leftRight, this.isOn);
       return;
     }
 
     this.isOn = value as boolean;
-    if(this.isOn) {
+    if (this.isOn) {
       return;
     }
 

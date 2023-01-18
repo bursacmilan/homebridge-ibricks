@@ -15,6 +15,7 @@ import {iBricksDirectorPlatformAccessory} from './iBricksDirectorPlatformAccesso
 import {iBricksMeteoPlatformAccessory} from './iBricksMeteoPlatformAccessory';
 import {Device} from './devices/Device';
 import {Director} from './devices/Director';
+import * as fs from 'fs';
 
 export class iBricksPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -43,8 +44,13 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     // Print config
     this.log.info('Config:', JSON.stringify(config));
 
-    // Handler objects
+    // Init path
     Cello.basePath = this.api.user.storagePath() + '/iBricks/';
+    if(!fs.existsSync(Cello.basePath)) {
+      fs.mkdirSync(Cello.basePath);
+    }
+
+    // Handler objects
     const loggerService = new LoggerService(this.log);
     const networkInfo = new NetworkInfo(config.ipAddress, config.macAddress, config.broadcastAddress);
     const udpMessageSender = new UdpMessageSender(loggerService);
@@ -57,7 +63,7 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     // Send IAMMASTER
     messageGenerator.sendIamMasterBroadcast();
 
-    // Init devices
+    // Init cellos
     const cellos = Cello.GetAllCellosFromFiles(loggerService);
     const devicesService = new DevicesService(cellos, loggerService, config);
 

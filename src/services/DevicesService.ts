@@ -105,9 +105,11 @@ export class DevicesService {
         this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name, `Cello ${cello.description} has 2 ${deviceType}s`);
         devices.push(factory(cello, 1));
         devices.push(factory(cello, 2));
-      } else if (cello.hardwareInfo.S === 1) {
+      } else if (cello.hardwareInfo[hardwareInfoProperty] as number === 1) {
         this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name, `Cello ${cello.description} has 1 ${deviceType}`);
         devices.push(factory(cello, 1));
+      } else {
+        this.loggerService.logDebug(Object.getPrototypeOf(this).getAllOfT.name, `Cello ${cello.description} has no ${deviceType}`);
       }
     }
 

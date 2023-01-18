@@ -1,16 +1,12 @@
 import {Cello} from './Cello';
-import {NetworkInfo} from './NetworkInfo';
+import {Message} from './Message';
 
 export class Request {
-  public message: string;
-  public nounce: number;
+  public message: Message;
   public cello: Cello;
-  private networkInfo: NetworkInfo;
 
-  constructor(message: string, nounce: number, cello: Cello, networkInfo: NetworkInfo) {
+  constructor(message: Message, cello: Cello) {
     this.message = message;
-    this.nounce = nounce;
     this.cello = cello;
-    this.networkInfo = networkInfo;
   }
 }

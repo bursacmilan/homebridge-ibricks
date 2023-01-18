@@ -15,6 +15,7 @@ export class iBricksDirectorPlatformAccessory {
   private readonly service: Service;
   private currentTemperature = 0;
   private targetTemperature = 0;
+  private heatingCoolingState = 3;
 
   constructor(
     private readonly platform: iBricksPlatform,
@@ -50,6 +51,31 @@ export class iBricksDirectorPlatformAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
       .onGet((() => 3));
 
+    // Init heatingCoolingState
+    const configHeatingCoolingStateString = platform.config.directorTargetHeatingCoolingState as string;
+    if(configHeatingCoolingStateString) {
+      switch (configHeatingCoolingStateString) {
+        case 'Off':
+          this.heatingCoolingState = 0;
+          break;
+        case 'Heat':
+          this.heatingCoolingState = 1;
+          break;
+        case 'Cool':
+          this.heatingCoolingState = 2;
+          break;
+        case 'Auto':
+          this.heatingCoolingState = 3;
+          break;
+        default:
+          this.heatingCoolingState = 3;
+          break;
+      }
+    }
+
+    this.platform.log.info(
+      `Director ${this.director.leftRight === 1 ? 'Right' : 'Left'} heatingCoolingState ${this.heatingCoolingState}`);
+
     // Set initial state
     this.currentTemperature = this.director.leftRight === 1 ?
       this.director.cello.currentTemperatureRight : this.director.cello.currentTemperatureLeft;
@@ -76,8 +102,8 @@ export class iBricksDirectorPlatformAccessory {
 
     // Interval updates
     setInterval(() => {
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState, 3);
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, 3);
+      this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeaterCoolerState, this.heatingCoolingState);
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, this.heatingCoolingState);
     }, 1500);
   }
 
