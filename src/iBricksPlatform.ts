@@ -16,6 +16,7 @@ import {iBricksMeteoPlatformAccessory} from './iBricksMeteoPlatformAccessory';
 import {Device} from './devices/Device';
 import {Director} from './devices/Director';
 import * as fs from 'fs';
+import address from 'address';
 
 export class iBricksPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -31,7 +32,7 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
 
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
-      this.discoverDevices(config);
+      this.discoverDevices(config).then();
     });
   }
 
@@ -40,7 +41,7 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
-  discoverDevices(config: PlatformConfig) {
+  async discoverDevices(config: PlatformConfig): Promise<void> {
     // Print config
     this.log.info('Config:', JSON.stringify(config));
 
@@ -50,9 +51,14 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
       fs.mkdirSync(Cello.basePath);
     }
 
+    const macAddress = await this.getMacAddress();
+    const ipAddress = address.ip();
+    this.log.info(`IP: ${ipAddress}`);
+    this.log.info(`MAC: ${macAddress}`);
+
     // Handler objects
     const loggerService = new LoggerService(this.log);
-    const networkInfo = new NetworkInfo(config.ipAddress, config.macAddress, config.broadcastAddress);
+    const networkInfo = new NetworkInfo(ipAddress, macAddress, '255.255.255.255');
     const udpMessageSender = new UdpMessageSender(loggerService);
     const messageParser = new MessageParser(udpMessageSender, loggerService);
     const messageGenerator = new MessageGenerator(udpMessageSender, loggerService, networkInfo);
@@ -120,5 +126,18 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
     }
+  }
+
+  private getMacAddress(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      address.mac((err, mac) => {
+        if (err) {
+          return reject(err);
+        }
+
+        // Replace all '-' from mac and make to upper
+        resolve(mac.replace(/:/g, '').toUpperCase());
+      });
+    });
   }
 }

@@ -5,21 +5,6 @@
   "schema": {
     "type": "object",
     "properties": {
-      "ipAddress": {
-        "title": "Server IP Address",
-        "type": "string",
-        "required": true
-      },
-      "macAddress": {
-        "title": "Server MAC Address",
-        "type": "string",
-        "required": true
-      },
-      "broadcastAddress": {
-        "title": "Server Broadcast Address",
-        "type": "string",
-        "required": true
-      },
       "disableLamella": {
         "title": "Disable Lamella",
         "type": "array",

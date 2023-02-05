@@ -108,6 +108,10 @@ export class iBricksShutterPlatformAccessory {
           this.currentLamella = this.shutter.leftRight === 1 ? celloEvent.cello.lamellaRight : celloEvent.cello.lamellaLeft;
           this.service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle,
             Math.floor((this.currentLamella * 180) - 90));
+
+          this.targetLamella = this.currentLamella;
+          this.service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle,
+            Math.floor((this.targetLamella * 180) - 90));
         }
       } else if(celloEvent.event === 'UP') {
         this.positionState = 1;

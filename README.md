@@ -36,15 +36,6 @@ If you want to disable the left side of the Cello (for example the left relay) s
 
 ---
 ## Configuration
-### Server IP Address
-This is the IP Address of the Server, where Homebridge is running. This is needed to send the UDP Request to the Cellos.
-
-### Server MAC Address
-This is the MAC Address of the Server, where Homebridge is running. This is needed to send the UDP Request to the Cellos.
-
-### Server Broadcast Address
-This is the Broadcast Address of the Server, where Homebridge is running. This is needed to send the UDP Request to the Cellos.
-
 ### Disable Lamella
 If you don't want to use the lamella, you can disable it here. Enter the Mac-Address of the Cello.
 
@@ -61,6 +52,10 @@ You can disable the following types:
 - Shutter => Window covering
 - Director => Thermostat
 - Meteo => Temperature sensor
+
+#### How to find the Mac-Address of a Cello
+You can find the Mac-Address of a Cello in the device settings of the accessory in Homebridge. The Mac-Address is the serial number of the accessory.
+![FINDMAC](./Find-Mac.png)
 
 ---
 
@@ -122,5 +117,11 @@ You can then install the beta version using @beta to the install command:
 ```
 sudo npm install -g homebridge-example-plugin@beta
 ```
+
+---
+
+## Change Log
+### 3.X -> 4.X
+- IP-Address, Broadcast-IP and Mac-Address are now automatically detected. You don't need to enter them anymore in the config.
 
 
