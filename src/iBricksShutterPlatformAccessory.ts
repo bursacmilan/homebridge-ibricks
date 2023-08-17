@@ -9,6 +9,7 @@ import {MessageParser} from './services/MessageParser';
 import {MessageGenerator} from './services/MessageGenerator';
 import {DeviceType} from './models/DeviceType';
 import {Shutter} from './devices/Shutter';
+import {CharacteristicsHelper} from './CharacteristicsHelper';
 
 export class iBricksShutterPlatformAccessory {
 
@@ -18,7 +19,7 @@ export class iBricksShutterPlatformAccessory {
   private positionState = 2;
   private targetLamella = 0;
   private currentLamella = 0;
-  private readonly lamellaDisabled: boolean = false;
+  private lamellaDisabled = false;
 
   constructor(
     private readonly platform: iBricksPlatform,
@@ -65,11 +66,13 @@ export class iBricksShutterPlatformAccessory {
     }
 
     // Set initial state
-    this.currentPosition = this.shutter.leftRight === 1 ? this.shutter.cello.shutterRight : this.shutter.cello.shutterLeft;
+    const position = this.shutter.leftRight === 1 ? this.shutter.cello.shutterRight : this.shutter.cello.shutterLeft;
+    this.currentPosition = CharacteristicsHelper.windowCoveringPositionRound(position * 100);
     this.targetPosition = this.currentPosition;
     this.positionState = 2;
 
-    this.currentLamella = this.shutter.leftRight === 1 ? this.shutter.cello.lamellaRight : this.shutter.cello.lamellaLeft;
+    const lamellaPosition = this.shutter.leftRight === 1 ? this.shutter.cello.lamellaRight : this.shutter.cello.lamellaLeft;
+    this.currentLamella = CharacteristicsHelper.lamellaTiltAngleRound((lamellaPosition * 180) -90);
     this.targetLamella = this.currentLamella;
 
     // Subscribe to changes
@@ -81,56 +84,54 @@ export class iBricksShutterPlatformAccessory {
 
       if(celloEvent.event === 'ST') {
         const position = this.shutter.leftRight === 1 ? celloEvent.cello.shutterRight : celloEvent.cello.shutterLeft;
-        this.targetPosition = position;
-        this.currentPosition = position;
+        this.targetPosition = CharacteristicsHelper.windowCoveringPositionRound(position * 100);
+        this.currentPosition = CharacteristicsHelper.windowCoveringPositionRound(position * 100);
         this.positionState = 2;
 
-        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, Math.floor(this.targetPosition * 100));
-        this.service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, Math.floor(this.currentPosition * 100));
+        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, this.targetPosition);
+        this.service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, this.currentPosition);
         this.service.updateCharacteristic(this.platform.Characteristic.PositionState, this.positionState);
 
         if(!this.lamellaDisabled) {
           const positionLamella = this.shutter.leftRight === 1 ? celloEvent.cello.lamellaRight : celloEvent.cello.lamellaLeft;
-          this.targetLamella = positionLamella;
-          this.currentLamella = positionLamella;
+          this.targetLamella = CharacteristicsHelper.lamellaTiltAngleRound((positionLamella * 180) - 90);
+          this.currentLamella = CharacteristicsHelper.lamellaTiltAngleRound((positionLamella * 180) - 90);
 
-          this.service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle,
-            Math.floor((this.currentLamella * 180) - 90));
-
-          this.service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle,
-            Math.floor((this.targetLamella * 180) - 90));
+          this.service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle, this.currentLamella);
+          this.service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle, this.targetLamella);
         }
       } else if(celloEvent.event === 'HL') {
-        this.currentPosition = this.shutter.leftRight === 1 ? celloEvent.cello.shutterRight : celloEvent.cello.shutterLeft;
-        this.service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, Math.floor(this.currentPosition * 100));
+        const position = this.shutter.leftRight === 1 ? celloEvent.cello.shutterRight : celloEvent.cello.shutterLeft;
+        this.currentPosition = CharacteristicsHelper.windowCoveringPositionRound(position * 100);
+
+        this.service.updateCharacteristic(this.platform.Characteristic.CurrentPosition, this.currentPosition);
 
         if(!this.lamellaDisabled) {
-          this.currentLamella = this.shutter.leftRight === 1 ? celloEvent.cello.lamellaRight : celloEvent.cello.lamellaLeft;
-          this.service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle,
-            Math.floor((this.currentLamella * 180) - 90));
-
+          const positionLamella = this.shutter.leftRight === 1 ? celloEvent.cello.lamellaRight : celloEvent.cello.lamellaLeft;
+          this.currentLamella = CharacteristicsHelper.lamellaTiltAngleRound((positionLamella * 180) - 90);
           this.targetLamella = this.currentLamella;
-          this.service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle,
-            Math.floor((this.targetLamella * 180) - 90));
+
+          this.service.updateCharacteristic(this.platform.Characteristic.CurrentHorizontalTiltAngle, this.currentLamella);
+          this.service.updateCharacteristic(this.platform.Characteristic.TargetHorizontalTiltAngle, this.targetLamella);
         }
       } else if(celloEvent.event === 'UP') {
+        this.targetPosition = 100;
         this.positionState = 1;
-        this.targetPosition = 1;
 
-        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, this.targetPosition * 100);
+        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, this.targetPosition);
         this.service.updateCharacteristic(this.platform.Characteristic.PositionState, this.positionState);
       } else if(celloEvent.event === 'DN') {
         this.positionState = 0;
         this.targetPosition = 0;
 
-        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, this.targetPosition * 100);
+        this.service.updateCharacteristic(this.platform.Characteristic.TargetPosition, this.targetPosition);
         this.service.updateCharacteristic(this.platform.Characteristic.PositionState, this.positionState);
       }
     });
   }
 
   private getCurrentPosition(): number {
-    return Math.floor(this.currentPosition * 100);
+    return this.currentPosition;
   }
 
   private getPositionState(): number {
@@ -138,11 +139,11 @@ export class iBricksShutterPlatformAccessory {
   }
 
   private getTargetPosition(): number {
-    return Math.floor(this.targetPosition * 100);
+    return this.targetPosition;
   }
 
   private setTargetPosition(value: CharacteristicValue): void {
-    this.targetPosition = value as number / 100;
+    this.targetPosition = value as number;
 
     if(this.currentPosition < this.targetPosition) {
       this.positionState = 1;
@@ -150,19 +151,19 @@ export class iBricksShutterPlatformAccessory {
       this.positionState = 0;
     }
 
-    this.messageGenerator.setShutter(this.shutter.cello, this.shutter.leftRight, this.targetPosition, -1);
+    this.messageGenerator.setShutter(this.shutter.cello, this.shutter.leftRight, this.targetPosition / 100, -1);
   }
 
   private getTargetLamella(): number {
-    return Math.floor((this.targetLamella * 180) - 90);
+    return this.targetLamella;
   }
 
   private setTargetLamella(value: CharacteristicValue): void {
-    this.targetLamella = ((value as number) + 90) / 180;
-    this.messageGenerator.setShutter(this.shutter.cello, this.shutter.leftRight, -1, this.targetLamella);
+    this.targetLamella = value as number;
+    this.messageGenerator.setShutter(this.shutter.cello, this.shutter.leftRight, -1, (this.targetLamella + 90) / 180);
   }
 
   private getCurrentLamella(): number {
-    return Math.floor((this.currentLamella * 180) - 90);
+    return this.currentLamella;
   }
 }
