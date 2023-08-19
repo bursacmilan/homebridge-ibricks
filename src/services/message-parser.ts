@@ -6,6 +6,7 @@ import { CelloEvent } from '../models/cello-event';
 import { DeviceType } from '../models/device-type';
 import { Message } from '../models/message';
 import { MessageInterpretor } from './message-interpretor';
+import { LogLevel } from 'homebridge';
 
 export class MessageParser {
     private readonly _loggerService: LoggerService;
@@ -42,8 +43,8 @@ export class MessageParser {
     //.KISS|AF=8CAAB5FA2BB5|AT=0000000CLOUD|N=7|E|BDCHG|CH=1|U=CEL|V=18.00 (TARGET)
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseDIRECTOR_CHANGE(message: Message): void {
-        if (message.channel === undefined) {
-            this._loggerService.logWarning('parseDIRECTOR_CHANGE', 'Channel not found');
+        if (message.channel === -1) {
+            this._loggerService.logError('parseDIRECTOR_CHANGE', 'Channel not found');
             return;
         }
 
@@ -63,35 +64,26 @@ export class MessageParser {
                     cello.targetTemperatureLeft = target !== undefined ? target : cello.targetTemperatureLeft;
                 }
             },
-            cello => {
-                if (!message.channel) {
-                    throw new Error('Channel not set');
-                }
-
-                this.celloEvent.next(new CelloEvent(cello, '', DeviceType.Director, message.channel));
-            },
+            cello => new CelloEvent(cello, '', DeviceType.Director, message.channel),
         );
     }
 
     //.KISS|AF=8CAAB5FA2BB5|AT=0000000CLOUD|N=3108|E|ASCHG|CH=1|CMD=HL|H=0.826|L=0.000
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseSHUTTER_CHANGE(message: Message): void {
-        if (message.channel === undefined) {
-            this._loggerService.logWarning('parseSHUTTER_CHANGE', 'Channel not found');
+        if (message.channel === -1) {
+            this._loggerService.logError('parseSHUTTER_CHANGE', 'Channel not found');
             return;
         }
 
         const cmd = message.getString('CMD');
         if (cmd === 'UP' || cmd === 'DN') {
-            this._updateCello(message.addressFrom, undefined, cello => {
-                this.celloEvent.next(new CelloEvent(cello, cmd, DeviceType.Shutter, message.channel));
-            });
-
+            this._updateCello(message.addressFrom, undefined, cello => new CelloEvent(cello, cmd, DeviceType.Shutter, message.channel));
             return;
         }
 
         if (cmd !== 'HL' && cmd !== 'ST') {
-            this._loggerService.logWarning('parseSHUTTER_CHANGE', `Unknown command: ${cmd ?? ''}`);
+            this._loggerService.logError('parseSHUTTER_CHANGE', `Unknown command: ${cmd ?? ''}`);
             return;
         }
 
@@ -106,9 +98,7 @@ export class MessageParser {
                     cello.lamellaLeft = message.getNumber('L') ?? cello.lamellaLeft;
                 }
             },
-            cello => {
-                this.celloEvent.next(new CelloEvent(cello, cmd, DeviceType.Shutter, message.channel));
-            },
+            cello => new CelloEvent(cello, cmd, DeviceType.Shutter, message.channel),
         );
     }
 
@@ -116,8 +106,8 @@ export class MessageParser {
     //.KISS|AF=8CAAB5FA2BB5|AT=0000000CLOUD|N=474|E|LRCHG|CH=1|ST=0
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseRELAY_CHANGE(message: Message): void {
-        if (message.channel === undefined) {
-            this._loggerService.logWarning('parseRELAY_CHANGE', 'Channel not found');
+        if (message.channel === -1) {
+            this._loggerService.logError('parseRELAY_CHANGE', 'Channel not found');
             return;
         }
 
@@ -132,9 +122,7 @@ export class MessageParser {
                     cello.dimmerLeft = message.getNumber('V') ?? cello.dimmerLeft;
                 }
             },
-            cello => {
-                this.celloEvent.next(new CelloEvent(cello, '', DeviceType.Relay, message.channel));
-            },
+            cello => new CelloEvent(cello, '', DeviceType.Relay, message.channel),
         );
     }
 
@@ -144,7 +132,7 @@ export class MessageParser {
     private parseYHELO(message: Message): void {
         let desc = message.getString('DESC');
         if (!desc) {
-            this._loggerService.logWarning('parseYHELO', 'Description not found');
+            this._loggerService.logError('parseYHELO', 'Description not found');
             return;
         }
 
@@ -152,10 +140,11 @@ export class MessageParser {
 
         const ip = message.getString('IP');
         if (!ip) {
-            this._loggerService.logWarning('parseYHELO', 'IP not found');
+            this._loggerService.logError('parseYHELO', 'IP not found');
             return;
         }
 
+        this._loggerService.logDebug('parseYHELO', 'Creating cello on file system');
         Cello.createCelloAndSafeOnFileSystem(desc, ip, message.addressFrom);
     }
 
@@ -167,7 +156,7 @@ export class MessageParser {
     private _parseYINFO_DebugInfo(message: Message): void {
         const v = message.getString('V');
         if (v === undefined) {
-            this._loggerService.logWarning('_parseYINFO_DebugInfo', 'V not found');
+            this._loggerService.logError('_parseYINFO_DebugInfo', 'V not found');
             return;
         }
 
@@ -176,27 +165,40 @@ export class MessageParser {
             cello => {
                 cello.hardwareInfo = this._parseAndGetHardwareInfo(v.split('/')[0]);
                 this._loggerService.logDebug('MessageParser', `Cello hardwareInfo: ${JSON.stringify(cello.hardwareInfo)}`);
-                // eslint-disable-next-line @typescript-eslint/no-empty-function
             },
             () => undefined,
         );
     }
 
-    private _updateCello(af: string, change: ((cello: Cello) => void) | undefined, sendEvent: (cello: Cello) => void): void {
+    private _updateCello(
+        af: string,
+        change: ((cello: Cello) => void) | undefined,
+        getEvent: (cello: Cello) => CelloEvent | undefined,
+    ): void {
         const cello = Cello.getCelloFromFile(Cello.getFilePath(af));
         if (cello === undefined) {
-            this._loggerService.logWarning('_updateCellos', `Cello with AF: ${af} not found`);
+            this._loggerService.logError('_updateCellos', `Cello with AF: ${af} not found`);
             return;
         }
 
         if (change === undefined) {
-            sendEvent(cello);
+            const event = getEvent(cello);
+            if (event != null) {
+                this._loggerService.logCelloEvent(event, LogLevel.DEBUG);
+                this.celloEvent.next(event);
+            }
+
             return;
         }
 
         change(cello);
         cello.saveToFile();
-        sendEvent(cello);
+
+        const event = getEvent(cello);
+        if (event != null) {
+            this._loggerService.logCelloEvent(event, LogLevel.DEBUG);
+            this.celloEvent.next(event);
+        }
     }
 
     private _parseAndGetHardwareInfo(info: string): HardwareInfo {
@@ -213,6 +215,7 @@ export class MessageParser {
         let r = 0,
             s = 0,
             h = 0;
+
         for (let i = 1; i < characters.length; i++) {
             if (characters[i] === 'R') {
                 r = +characters[i - 1];

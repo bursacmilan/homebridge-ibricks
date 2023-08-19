@@ -1,5 +1,6 @@
 import { Logger, LogLevel } from 'homebridge';
 import postgres from 'postgres';
+import { CelloEvent } from '../models/cello-event';
 
 export class LoggerService {
     private readonly _logger: Logger;
@@ -30,6 +31,27 @@ export class LoggerService {
         void this._logToDatabase(method, message).then();
     }
 
+    public logCelloEvent(celloEvent: CelloEvent, logLevel: LogLevel): void {
+        void this._logCelloEventInternal(celloEvent, logLevel).then();
+    }
+
+    private async _logCelloEventInternal(celloEvent: CelloEvent, logLevel: LogLevel): Promise<void> {
+        if (!this._sql) {
+            return;
+        }
+
+        try {
+            await this._sql`
+            insert into 'cello-events'
+                (cello_ip, cello_mac, event, deviceType, leftRight, log_level)
+            values 
+                (${celloEvent.cello.ip}, ${celloEvent.cello.mac}, ${celloEvent.event}, ${celloEvent.deviceType}, ${celloEvent.leftRight}, ${logLevel})
+          `;
+        } catch (error) {
+            this._logger.log(LogLevel.ERROR, 'Postgres error: ' + JSON.stringify(error));
+        }
+    }
+
     private async _logToDatabase(method: string, message: string): Promise<void> {
         if (!this._sql) {
             return;
@@ -40,7 +62,7 @@ export class LoggerService {
             insert into logs(method, message) values (${method}, ${message})
           `;
         } catch (error) {
-            this._logger.log(LogLevel.ERROR, 'Postgre error: ' + JSON.stringify(error));
+            this._logger.log(LogLevel.ERROR, 'Postgres error: ' + JSON.stringify(error));
         }
     }
 }
