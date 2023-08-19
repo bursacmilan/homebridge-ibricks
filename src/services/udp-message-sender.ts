@@ -1,18 +1,18 @@
 import * as dgram from 'dgram';
-import {LoggerService} from './LoggerService';
-import {Request} from '../models/Request';
-import {NetworkInfo} from '../models/NetworkInfo';
-import {Message} from '../models/Message';
+import {LoggerService} from './logger-service';
+import {Request} from '../models/request';
+import {NetworkInfo} from '../models/network-info';
+import {Message} from '../models/message';
 
 export class UdpMessageSender {
-  private readonly loggerService: LoggerService;
+  private readonly _loggerService: LoggerService;
 
   constructor(loggerService: LoggerService) {
-    this.loggerService = loggerService;
+    this._loggerService = loggerService;
   }
 
   public sendBroadcast(message: Message, networkInfo: NetworkInfo): void {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).sendBroadcast.name,
+    this._loggerService.logDebug('sendBroadcast',
       `Sending broadcast message: ${message.getMessageAsString()} to ${networkInfo.broadcastAddress}`);
 
     const client = dgram.createSocket('udp4');
@@ -21,16 +21,16 @@ export class UdpMessageSender {
       const address = client.address();
       client.setBroadcast(true);
 
-      this.loggerService.logDebug(Object.getPrototypeOf(this).sendBroadcast.name,
+      this._loggerService.logDebug('sendBroadcast',
         `UDP client listening on ${address.address}:${address.port}`);
 
       const messageBuffer = Buffer.from(message.getMessageAsString());
       client.send(messageBuffer, 0, messageBuffer.length, 3178, networkInfo.broadcastAddress, (err) => {
         if (err) {
-          this.loggerService.logError(Object.getPrototypeOf(this).sendBroadcast.name,
+          this._loggerService.logError('sendBroadcast',
             `Error sending broadcast message: ${err.message}, Error code: ${err.message}`);
         } else {
-          this.loggerService.logDebug(Object.getPrototypeOf(this).sendBroadcast.name,
+          this._loggerService.logDebug('sendBroadcast',
             `Broadcast message successfully sent to ${networkInfo.broadcastAddress}`);
         }
 
@@ -40,7 +40,7 @@ export class UdpMessageSender {
   }
 
   public sendMessage(request: Request): void {
-    this.loggerService.logDebug(Object.getPrototypeOf(this).sendMessage.name,
+    this._loggerService.logDebug('sendBroadcast',
       `Sending message to ${request.cello.description} with message ${request.message.getMessageAsString()}`);
 
     const client = dgram.createSocket('udp4');
@@ -48,10 +48,10 @@ export class UdpMessageSender {
 
     client.send(messageBuffer, 0, messageBuffer.length, request.cello.port, request.cello.ip, (err) => {
       if (err) {
-        this.loggerService.logError(Object.getPrototypeOf(this).sendMessage.name,
+        this._loggerService.logError('sendBroadcast',
           `Error sending message: ${err.message} to ${request.cello.description} (${request.cello.ip}), Error code: ${err.message}`);
       } else {
-        this.loggerService.logDebug(Object.getPrototypeOf(this).sendMessage.name,
+        this._loggerService.logDebug('sendBroadcast',
           `Message successfully sent to ${request.cello.description} (${request.cello.ip})`);
       }
 

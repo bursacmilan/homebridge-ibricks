@@ -1,5 +1,5 @@
-import {Cello} from './Cello';
-import {Message} from './Message';
+import {Cello} from './cello';
+import {Message} from './message';
 
 export class Request {
   public message: Message;
