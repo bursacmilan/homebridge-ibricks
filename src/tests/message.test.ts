@@ -1,4 +1,4 @@
-import {Message} from '../src/models/Message';
+import {Message} from '../models/message';
 
 describe('Testing isEventWithCommand', () => {
   const messageWithTypeE = new Message('.KISS', 'AF', 'AT', 'N', 'E', 'TEST', 'CH', new Map<string, string>());
@@ -22,7 +22,7 @@ describe('Testing isEventWithCommandAndData', () => {
     ['V', 'ABC'],
   ]));
 
-  const messageWithTypeEAndNoAdditionalData = new Message('.KISS', 'AF', 'AT', 'N', 'E', 'TEST', 'CH', new Map<string, string>());
+  const messageWithTypeeAndNoAdditionalData = new Message('.KISS', 'AF', 'AT', 'N', 'E', 'TEST', 'CH', new Map<string, string>());
 
   test('Should return true if message type is "E", the command is correct and additional data is the searched value', () => {
     expect(messageWithTypeE.isEventWithCommandAndData('TEST', 'V', 'ABC')).toBe(true);
@@ -33,7 +33,7 @@ describe('Testing isEventWithCommandAndData', () => {
   });
 
   test('Should return false if message type is "E", the command is correct but has no additional data', () => {
-    expect(messageWithTypeEAndNoAdditionalData.isEventWithCommandAndData('TEST', 'V', 'XYZ')).toBe(false);
+    expect(messageWithTypeeAndNoAdditionalData.isEventWithCommandAndData('TEST', 'V', 'XYZ')).toBe(false);
   });
 });
 

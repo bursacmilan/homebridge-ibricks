@@ -1,10 +1,10 @@
 import { API } from 'homebridge';
 import { PLATFORM_NAME } from './settings';
-import {iBricksPlatform} from './iBricksPlatform';
+import {IbricksPlatform} from './ibricks-platform';
 
 /**
  * This method registers the platform with Homebridge
  */
-export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, iBricksPlatform);
+export = (api: API): void => {
+  api.registerPlatform(PLATFORM_NAME, IbricksPlatform);
 };

@@ -1,11 +1,12 @@
 import * as fs from 'fs';
-import {HardwareInfo} from './HardwareInfo';
+import {HardwareInfo} from './hardware-info';
 import path from 'path';
-import {LoggerService} from '../services/LoggerService';
+import {LoggerService} from '../services/logger-service';
 
 export class Cello {
   public static basePath = '';
 
+  // Cello info
   public description: string;
   public ip: string;
   public mac: string;
@@ -35,11 +36,11 @@ export class Cello {
     this.description = description;
     this.ip = ip;
     this.mac = mac;
-    this.filePath = Cello.GetFilePath(this.mac);
+    this.filePath = Cello.getFilePath(this.mac);
   }
 
-  public static CreateCelloAndSafeOnFileSystem(description: string, ip: string, mac: string): Cello {
-    let cello = Cello.GetCelloFromFile(this.GetFilePath(mac));
+  public static createCelloAndSafeOnFileSystem(description: string, ip: string, mac: string): Cello {
+    let cello = Cello.getCelloFromFile(this.getFilePath(mac));
 
     if (cello !== undefined) {
       cello.ip = ip;
@@ -48,23 +49,24 @@ export class Cello {
       cello = new Cello(description, ip, mac);
     }
 
-    cello.SaveToFile();
+    cello.saveToFile();
     return cello;
   }
 
-  public static GetFilePath(mac: string): string {
+  public static getFilePath(mac: string): string {
     return this.basePath + mac + '.json';
   }
 
-  public static GetCelloFromFile(filePath: string): Cello | undefined {
+  public static getCelloFromFile(filePath: string): Cello | undefined {
     if (!fs.existsSync(filePath)) {
       return undefined;
     }
 
     const fileContent = fs.readFileSync(filePath);
-    const jsonObject = JSON.parse(fileContent.toString());
+    const jsonObject = JSON.parse(fileContent.toString()) as Cello;
 
     const cello = new Cello(jsonObject.description, jsonObject.ip, jsonObject.mac);
+
     cello.port = jsonObject.port;
     cello.relayLeft = jsonObject.relayLeft ?? false;
     cello.relayRight = jsonObject.relayRight ?? false;
@@ -87,7 +89,7 @@ export class Cello {
     return cello;
   }
 
-  public static GetAllCellosFromFiles(loggerService: LoggerService): Cello[] {
+  public static getAllCellosFromFiles(loggerService: LoggerService): Cello[] {
     loggerService.logDebug('GetAllCellosFromFiles', 'GetAllCellosFromFiles');
 
     const cellos: Cello[] = [];
@@ -103,7 +105,7 @@ export class Cello {
 
     for (const jsonFile of jsonFiles) {
       loggerService.logDebug('GetAllCellosFromFiles', `${jsonFile}`);
-      const cello = Cello.GetCelloFromFile(path.join(this.basePath, jsonFile));
+      const cello = Cello.getCelloFromFile(path.join(this.basePath, jsonFile));
       if (cello === undefined) {
         continue;
       }
@@ -114,7 +116,7 @@ export class Cello {
     return cellos;
   }
 
-  public SaveToFile(): void {
+  public saveToFile(): void {
     if (!fs.existsSync(Cello.basePath)) {
       return;
     }

@@ -5,7 +5,7 @@ export class Message {
   public nonce: string;
   public type: string;
   public command: string;
-  public channel: number | undefined;
+  public channel: number;
   public additionalData: Map<string, string>;
 
   constructor(protocol: string, af: string, at: string, n: string,
@@ -18,7 +18,7 @@ export class Message {
     this.type = type;
     this.command = command;
     this.additionalData = additionalData;
-    this.channel = Message.parseStringToNumber(channel);
+    this.channel = Message._parseStringToNumber(channel);
   }
 
   public isEventWithCommand(command: string): boolean {
@@ -27,13 +27,12 @@ export class Message {
 
   public isEventWithCommandAndData(command: string, additionalDataKey: string, additionalDataValue: string): boolean {
     return this.isEventWithCommand(command) &&
-      this.additionalData.get(additionalDataKey) !== undefined &&
-      this.additionalData.get(additionalDataKey)!.startsWith(additionalDataValue);
+      (this.additionalData.get(additionalDataKey)?.startsWith(additionalDataValue) ?? false);
   }
 
   public getNumber(additionalDataKey: string): number | undefined {
     const data = this.additionalData.get(additionalDataKey);
-    return Message.parseStringToNumber(data);
+    return Message._parseStringToNumber(data);
   }
 
   public getString(additionalDataKey: string): string | undefined {
@@ -53,8 +52,8 @@ export class Message {
     return message;
   }
 
-  private static parseStringToNumber(data: string | undefined): number | undefined {
+  private static _parseStringToNumber(data: string | undefined): number {
     const dataAsNumber = data ? Number(data) : NaN;
-    return isNaN(dataAsNumber) ? undefined : dataAsNumber;
+    return isNaN(dataAsNumber) ? -1 : dataAsNumber;
   }
 }

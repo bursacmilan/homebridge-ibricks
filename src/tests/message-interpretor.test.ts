@@ -1,4 +1,4 @@
-import {MessageInterpretor} from '../src/services/MessageInterpretor';
+import {MessageInterpretor} from '../services/message-interpretor';
 
 describe('Testing director message interpretor', () => {
   test('SICHG should be interpreted correctly', () => {

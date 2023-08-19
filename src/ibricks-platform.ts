@@ -1,24 +1,26 @@
 import {API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic} from 'homebridge';
 
 import {PLATFORM_NAME, PLUGIN_NAME} from './settings';
-import {iBricksLightPlatformAccessory} from './iBricksLightPlatformAccessory';
-import {Cello} from './models/Cello';
-import {DevicesService} from './services/DevicesService';
-import {NetworkInfo} from './models/NetworkInfo';
-import {LoggerService} from './services/LoggerService';
-import {UdpMessageSender} from './services/UdpMessageSender';
-import {MessageGenerator} from './services/MessageGenerator';
-import {MessageParser} from './services/MessageParser';
-import {UdpServer} from './services/UdpServer';
-import {iBricksShutterPlatformAccessory} from './iBricksShutterPlatformAccessory';
-import {iBricksDirectorPlatformAccessory} from './iBricksDirectorPlatformAccessory';
-import {iBricksMeteoPlatformAccessory} from './iBricksMeteoPlatformAccessory';
-import {Device} from './devices/Device';
-import {Director} from './devices/Director';
+import {IbricksLightPlatformAccessory} from './ibricks-light-platform-accessory';
+import {Cello} from './models/cello';
+import {DevicesService} from './services/devices-service';
+import {NetworkInfo} from './models/network-info';
+import {LoggerService} from './services/logger-service';
+import {UdpMessageSender} from './services/udp-message-sender';
+import {MessageGenerator} from './services/message-generator';
+import {MessageParser} from './services/message-parser';
+import {UdpServer} from './services/udp-server';
+import {IbricksShutterPlatformAccessory} from './ibricks-shutter-platform-accessory';
+import {IbricksDirectorPlatformAccessory} from './ibricks-director-platform-accessory';
+import {IbricksMeteoPlatformAccessory} from './ibricks-meteo-platform-accessory';
 import * as fs from 'fs';
 import address from 'address';
+import {Device} from './devices/device';
+import {Relay} from './devices/relay';
+import {Shutter} from './devices/shutter';
+import {Director} from './devices/director';
 
-export class iBricksPlatform implements DynamicPlatformPlugin {
+export class IbricksPlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
   public readonly accessories: PlatformAccessory[] = [];
@@ -32,16 +34,16 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
 
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
-      this.discoverDevices(config).then();
+      void this._discoverDevices(config).then();
     });
   }
 
-  configureAccessory(accessory: PlatformAccessory) {
+  public configureAccessory(accessory: PlatformAccessory): void {
     this.log.info('Loading accessory from cache:', accessory.displayName);
     this.accessories.push(accessory);
   }
 
-  async discoverDevices(config: PlatformConfig): Promise<void> {
+  private async _discoverDevices(config: PlatformConfig): Promise<void> {
     // Print config
     this.log.info('Config:', JSON.stringify(config));
 
@@ -51,8 +53,8 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
       fs.mkdirSync(Cello.basePath);
     }
 
-    const macAddress = await this.getMacAddress();
-    const ipAddress = address.ip();
+    const macAddress = await this._getMacAddress();
+    const ipAddress = address.ip() as string;
     this.log.info(`IP: ${ipAddress}`);
     this.log.info(`MAC: ${macAddress}`);
 
@@ -60,41 +62,41 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     const loggerService = new LoggerService(this.log);
     const networkInfo = new NetworkInfo(ipAddress, macAddress, '255.255.255.255');
     const udpMessageSender = new UdpMessageSender(loggerService);
-    const messageParser = new MessageParser(udpMessageSender, loggerService);
+    const messageParser = new MessageParser(loggerService);
     const messageGenerator = new MessageGenerator(udpMessageSender, loggerService, networkInfo);
 
     // UDP Server
-    new UdpServer(loggerService, messageParser, networkInfo, udpMessageSender).startAndRun();
+    new UdpServer(loggerService, messageParser, networkInfo).startAndRun();
 
     // Send IAMMASTER
     messageGenerator.sendIamMasterBroadcast();
 
     // Init cellos
-    const cellos = Cello.GetAllCellosFromFiles(loggerService);
+    const cellos = Cello.getAllCellosFromFiles(loggerService);
     const devicesService = new DevicesService(cellos, loggerService, config);
 
     // Relays
     const relays = devicesService.getAllRelays();
-    this.addDevices<Director>(relays, (platform, accessory, relay) => {
-      new iBricksLightPlatformAccessory(platform, accessory, messageParser, messageGenerator, relay);
+    this._addDevices<Relay>(relays, (platform, accessory, relay) => {
+      new IbricksLightPlatformAccessory(platform, accessory, messageParser, messageGenerator, relay);
     });
 
     // Shutters
     const shutters = devicesService.getAllShutters();
-    this.addDevices<Director>(shutters, (platform, accessory, shutter) => {
-      new iBricksShutterPlatformAccessory(platform, accessory, messageParser, messageGenerator, shutter);
+    this._addDevices<Shutter>(shutters, (platform, accessory, shutter) => {
+      new IbricksShutterPlatformAccessory(platform, accessory, messageParser, messageGenerator, shutter);
     });
 
     // Directors
     const directors = devicesService.getAllDirectors(true);
-    this.addDevices<Director>(directors, (platform, accessory, director) => {
-      new iBricksDirectorPlatformAccessory(platform, accessory, messageParser, messageGenerator, director);
+    this._addDevices<Director>(directors, (platform, accessory, director) => {
+      new IbricksDirectorPlatformAccessory(platform, accessory, messageParser, messageGenerator, director);
     });
 
     // Meteos
     const meteos = devicesService.getAllMeteos();
-    this.addDevices<Director>(meteos, (platform, accessory, meteo) => {
-      new iBricksMeteoPlatformAccessory(platform, accessory, messageParser, messageGenerator, meteo);
+    this._addDevices<Director>(meteos, (platform, accessory, meteo) => {
+      new IbricksMeteoPlatformAccessory(platform, accessory, messageParser, meteo);
     });
 
     // Reboot if needed
@@ -105,8 +107,8 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     }
   }
 
-  private addDevices<T>(devices: T[],
-    accessoryFactory: (platform: iBricksPlatform, accessory: PlatformAccessory, device: T) => void) {
+  private _addDevices<T>(devices: T[],
+    accessoryFactory: (platform: IbricksPlatform, accessory: PlatformAccessory, device: T) => void): void {
     for(const device of devices) {
       const deviceAsBase = device as unknown as Device;
 
@@ -128,7 +130,7 @@ export class iBricksPlatform implements DynamicPlatformPlugin {
     }
   }
 
-  private getMacAddress(): Promise<string> {
+  private _getMacAddress(): Promise<string> {
     return new Promise((resolve, reject) => {
       address.mac((err, mac) => {
         if (err) {

@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import {Message} from '../models/Message';
+import {Message} from '../models/message';
 
 export class MessageInterpretor {
 
@@ -31,7 +31,7 @@ export class MessageInterpretor {
   ***/
 
   public static interpret(messageToInterpret: string): Message {
-    const splittedMessage: string[] = messageToInterpret.split('|').map(d => this.getCleanedData(d));
+    const splittedMessage: string[] = messageToInterpret.split('|').map(d => this._getCleanedData(d));
     const additionalData: Map<string, string> = new Map<string, string>();
     let protocol = '', addressFrom = '', addressTo = '', nonce = '', type = '', command = '', channel = '';
 
@@ -81,7 +81,7 @@ export class MessageInterpretor {
     return new Message(protocol, addressFrom, addressTo, nonce, type, command, channel, additionalData);
   }
 
-  private static getCleanedData(data: string): string {
+  private static _getCleanedData(data: string): string {
     return data.replace(/\r/g, '');
   }
 }

@@ -1,5 +1,5 @@
-import {Cello} from './Cello';
-import {DeviceType} from './DeviceType';
+import {Cello} from './cello';
+import {DeviceType} from './device-type';
 
 export class CelloEvent {
   public cello: Cello;
