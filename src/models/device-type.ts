@@ -1,5 +1,5 @@
 export enum DeviceType {
-  Relay = 'Relay',
-  Shutter = 'Shutter',
-  Director = 'Director',
+    Relay = 'Relay',
+    Shutter = 'Shutter',
+    Director = 'Director',
 }

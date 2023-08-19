@@ -23,10 +23,10 @@
         "type": "string",
         "default": "relay",
         "oneOf": [
-          { "title":  "Off", "enum": [ "Off" ] },
-          { "title":  "Heat", "enum": [ "Heat" ] },
-          { "title":  "Cool", "enum": [ "Cool" ] },
-          { "title":  "Auto", "enum": [ "Auto" ] }
+          { "title": "Off", "enum": ["Off"] },
+          { "title": "Heat", "enum": ["Heat"] },
+          { "title": "Cool", "enum": ["Cool"] },
+          { "title": "Auto", "enum": ["Auto"] }
         ]
       },
       "ignoreDevices": {
@@ -57,10 +57,10 @@
                     "type": "string",
                     "default": "relay",
                     "oneOf": [
-                      { "title":  "Relay", "enum": [ "relay" ] },
-                      { "title":  "Shutter", "enum": [ "shutter" ] },
-                      { "title":  "Director", "enum": [ "director" ] },
-                      { "title":  "Meteo", "enum": [ "meteo" ] }
+                      { "title": "Relay", "enum": ["relay"] },
+                      { "title": "Shutter", "enum": ["shutter"] },
+                      { "title": "Director", "enum": ["director"] },
+                      { "title": "Meteo", "enum": ["meteo"] }
                     ]
                   }
                 }
