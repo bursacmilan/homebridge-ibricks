@@ -18,6 +18,11 @@
         "type": "boolean",
         "required": false
       },
+      "postgresSql": {
+        "title": "PostgresSQL Connection String",
+        "type": "string",
+        "required": false
+      },
       "directorTargetHeatingCoolingState": {
         "title": "Director Target Heating Cooling State",
         "type": "string",

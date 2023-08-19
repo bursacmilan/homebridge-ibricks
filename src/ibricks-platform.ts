@@ -59,7 +59,7 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
         this.log.info(`MAC: ${macAddress}`);
 
         // Handler objects
-        const loggerService = new LoggerService(this.log);
+        const loggerService = new LoggerService(this.log, config.postgresSql as string);
         const networkInfo = new NetworkInfo(ipAddress, macAddress, '255.255.255.255');
         const udpMessageSender = new UdpMessageSender(loggerService);
         const messageParser = new MessageParser(loggerService);
