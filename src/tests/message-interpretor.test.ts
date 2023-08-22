@@ -102,7 +102,7 @@ describe('Testing IAMMASTER response message interpretor', () => {
         expect(interpretedMessage.nonce).toBe('453');
         expect(interpretedMessage.type).toBe('E');
         expect(interpretedMessage.command).toBe('YHELO');
-        expect(interpretedMessage.channel).toBe(undefined);
+        expect(interpretedMessage.channel).toBe(-1);
 
         expect(interpretedMessage.additionalData.get('IP')).toBe('192.168.3.250');
         expect(interpretedMessage.additionalData.get('DESC')).toBe('Buero+%2D+T1');
@@ -121,7 +121,7 @@ describe('Testing debug info message interpretor', () => {
         expect(interpretedMessage.nonce).toBe('460');
         expect(interpretedMessage.type).toBe('E');
         expect(interpretedMessage.command).toBe('YINFO');
-        expect(interpretedMessage.channel).toBe(undefined);
+        expect(interpretedMessage.channel).toBe(-1);
 
         expect(interpretedMessage.additionalData.get('T')).toBe('DebugInfo');
         expect(interpretedMessage.additionalData.get('V')).toBe('Hardware=1R1S1H/1803;Firmware=2.2.44.PROD...');

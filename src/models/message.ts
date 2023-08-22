@@ -47,7 +47,7 @@ export class Message {
 
     public getMessageAsString(): string {
         let message = `${this.protocol}|AF=${this.addressFrom}|AT=${this.addressTo}|N=${this.nonce}|${this.type}|${this.command}`;
-        if (this.channel) {
+        if (this.channel !== -1) {
             message += `|CH=${this.channel}`;
         }
 

@@ -56,11 +56,11 @@ describe('Testing getNumber', () => {
     });
 
     test('Should return undefined if the string value is not in a valid format', () => {
-        expect(messageWithTypeE.getNumber('INVALIDNUMBER')).toBe(undefined);
+        expect(messageWithTypeE.getNumber('INVALIDNUMBER')).toBe(-1);
     });
 
     test('Should return undefined if the string value is empty', () => {
-        expect(messageWithTypeE.getNumber('EMPTYNUMBER')).toBe(undefined);
+        expect(messageWithTypeE.getNumber('EMPTYNUMBER')).toBe(-1);
     });
 });
 
@@ -84,7 +84,7 @@ describe('Testing getString', () => {
     });
 
     test('Should return undefined if the string value is empty', () => {
-        expect(messageWithTypeE.getNumber('EMPTYSTRING')).toBe(undefined);
+        expect(messageWithTypeE.getNumber('EMPTYSTRING')).toBe(-1);
     });
 });
 
