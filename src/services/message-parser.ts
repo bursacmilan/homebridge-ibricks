@@ -17,13 +17,12 @@ export class MessageParser {
     }
 
     public parse(data: string): void {
-        this._loggerService.logDebug('parse', `Parsing message: ${data}`);
+        this._loggerService.logDebug('MessageParser.Parse', `Parsing message: ${data}`);
         const message = MessageInterpretor.interpret(data);
 
         this._loggerService.logDebug(
-            'parse',
-            `Parsed message: ${JSON.stringify(message)},
-     additional: ${JSON.stringify(Object.fromEntries(message.additionalData))}`,
+            'MessageParser.Parse',
+            `Parsed message: ${JSON.stringify(message)}, additional: ${JSON.stringify(Object.fromEntries(message.additionalData))}`,
         );
 
         if (message.isEventWithCommand('YHELO')) {
@@ -44,14 +43,14 @@ export class MessageParser {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseDIRECTOR_CHANGE(message: Message): void {
         if (message.channel === -1) {
-            this._loggerService.logError('parseDIRECTOR_CHANGE', 'Channel not found');
+            this._loggerService.logError('MessageParser.ParseDIRECTOR_CHANGE', `Channel ${message.channel} not found`);
             return;
         }
 
         const current = message.isEventWithCommand('SICHG') ? message.getNumber('V') : undefined;
         const target = message.isEventWithCommand('BDCHG') ? message.getNumber('V') : undefined;
 
-        this._loggerService.logDebug('parseDIRECTOR_CHANGE', `Current: ${current ?? ''} Target: ${target ?? ''}`);
+        this._loggerService.logDebug('MessageParser.ParseDIRECTOR_CHANGE', `Current: ${current ?? ''} Target: ${target ?? ''}`);
 
         this._updateCello(
             message.addressFrom,
@@ -72,7 +71,7 @@ export class MessageParser {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseSHUTTER_CHANGE(message: Message): void {
         if (message.channel === -1) {
-            this._loggerService.logError('parseSHUTTER_CHANGE', 'Channel not found');
+            this._loggerService.logError('MessageParser.ParseSHUTTER_CHANGE', `Channel ${message.channel} not found`);
             return;
         }
 
@@ -83,7 +82,7 @@ export class MessageParser {
         }
 
         if (cmd !== 'HL' && cmd !== 'ST') {
-            this._loggerService.logError('parseSHUTTER_CHANGE', `Unknown command: ${cmd ?? ''}`);
+            this._loggerService.logError('MessageParser.ParseSHUTTER_CHANGE', `Unknown command: ${cmd ?? ''}`);
             return;
         }
 
@@ -107,7 +106,7 @@ export class MessageParser {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     private parseRELAY_CHANGE(message: Message): void {
         if (message.channel === -1) {
-            this._loggerService.logError('parseRELAY_CHANGE', 'Channel not found');
+            this._loggerService.logError('MessageParser.ParseRELAY_CHANGE', `Channel ${message.channel} not found`);
             return;
         }
 
@@ -132,7 +131,7 @@ export class MessageParser {
     private parseYHELO(message: Message): void {
         let desc = message.getString('DESC');
         if (!desc) {
-            this._loggerService.logError('parseYHELO', 'Description not found');
+            this._loggerService.logError('MessageParser.ParseYHELO', `Channel ${message.channel} not found`);
             return;
         }
 
@@ -140,11 +139,11 @@ export class MessageParser {
 
         const ip = message.getString('IP');
         if (!ip) {
-            this._loggerService.logError('parseYHELO', 'IP not found');
+            this._loggerService.logError('MessageParser.ParseYHELO', `IP ${ip ?? ''} not found`);
             return;
         }
 
-        this._loggerService.logDebug('parseYHELO', 'Creating cello on file system');
+        this._loggerService.logDebug('MessageParser.ParseYHELO', 'Creating cello on file system');
         Cello.createCelloAndSafeOnFileSystem(desc, ip, message.addressFrom);
     }
 
@@ -156,7 +155,7 @@ export class MessageParser {
     private _parseYINFO_DebugInfo(message: Message): void {
         const v = message.getString('V');
         if (v === undefined) {
-            this._loggerService.logError('_parseYINFO_DebugInfo', 'V not found');
+            this._loggerService.logError('MessageParser.ParseYINFO_DebugInfo', 'V not found');
             return;
         }
 
@@ -164,7 +163,10 @@ export class MessageParser {
             message.addressFrom,
             cello => {
                 cello.hardwareInfo = this._parseAndGetHardwareInfo(v.split('/')[0]);
-                this._loggerService.logDebug('MessageParser', `Cello hardwareInfo: ${JSON.stringify(cello.hardwareInfo)}`);
+                this._loggerService.logDebug(
+                    'MessageParser.ParseYINFO_DebugInfo',
+                    `Cello hardwareInfo: ${JSON.stringify(cello.hardwareInfo)}`,
+                );
             },
             () => undefined,
         );
@@ -177,13 +179,13 @@ export class MessageParser {
     ): void {
         const cello = Cello.getCelloFromFile(Cello.getFilePath(af));
         if (cello === undefined) {
-            this._loggerService.logError('_updateCellos', `Cello with AF: ${af} not found`);
+            this._loggerService.logError('MessageParser.UpdateCellos', `Cello with AF: ${af} not found`);
             return;
         }
 
         if (change === undefined) {
             const event = getEvent(cello);
-            if (event != null) {
+            if (event) {
                 this._loggerService.logCelloEvent(event, LogLevel.DEBUG);
                 this.celloEvent.next(event);
             }
@@ -195,7 +197,7 @@ export class MessageParser {
         cello.saveToFile();
 
         const event = getEvent(cello);
-        if (event != null) {
+        if (event) {
             this._loggerService.logCelloEvent(event, LogLevel.DEBUG);
             this.celloEvent.next(event);
         }
@@ -203,10 +205,10 @@ export class MessageParser {
 
     private _parseAndGetHardwareInfo(info: string): HardwareInfo {
         if (info.indexOf('S36TX') !== -1) {
-            this._loggerService.logDebug('_parseAndGetHardwareInfo', 'S36TX found');
+            this._loggerService.logDebug('MessageParser.ParseAndGetHardwareInfo', 'S36TX found');
             return new HardwareInfo(1, 0, 1, 0);
         } else if (info.indexOf('DIM_GL') !== -1) {
-            this._loggerService.logDebug('_parseAndGetHardwareInfo', 'DIM_GL found');
+            this._loggerService.logDebug('MessageParser.ParseAndGetHardwareInfo', 'DIM_GL found');
             return new HardwareInfo(1, 0, 0, 1);
         }
 

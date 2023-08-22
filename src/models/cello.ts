@@ -94,29 +94,32 @@ export class Cello {
     }
 
     public static getAllCellosFromFiles(loggerService: LoggerService): Cello[] {
-        loggerService.logDebug('GetAllCellosFromFiles', 'GetAllCellosFromFiles');
+        loggerService.logDebug('Cello.GetAllCellosFromFiles', `Loading all cellos from file system on base path ${Cello.basePath}`);
 
         const cellos: Cello[] = [];
         if (!fs.existsSync(this.basePath)) {
-            loggerService.logDebug('GetAllCellosFromFiles', `basePath ${Cello.basePath} does not exist`);
+            loggerService.logError('Cello.GetAllCellosFromFiles', `BasePath ${Cello.basePath} does not exist`);
             return cellos;
         }
 
         const files = fs.readdirSync(this.basePath);
         const jsonFiles = files.filter(file => path.extname(file) === '.json');
 
-        loggerService.logDebug('GetAllCellosFromFiles', `Total files: ${files.length}`);
+        loggerService.logDebug('Cello.GetAllCellosFromFiles', `Total ${files.length} JSON files found`);
 
         for (const jsonFile of jsonFiles) {
-            loggerService.logDebug('GetAllCellosFromFiles', `${jsonFile}`);
+            loggerService.logDebug('Cello.GetAllCellosFromFiles', `Processing json file with content: ${jsonFile}`);
             const cello = Cello.getCelloFromFile(path.join(this.basePath, jsonFile));
             if (cello === undefined) {
+                loggerService.logError('Cello.GetAllCellosFromFiles', `Could not process JSON file`);
                 continue;
             }
 
+            loggerService.logDebug('Cello.GetAllCellosFromFiles', `JSON file processed. Cello: ${JSON.stringify(cello)}`);
             cellos.push(cello);
         }
 
+        loggerService.logDebug('Cello.GetAllCellosFromFiles', `Returning total ${cellos.length} cellos`);
         return cellos;
     }
 

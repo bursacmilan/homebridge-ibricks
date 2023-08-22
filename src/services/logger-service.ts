@@ -42,10 +42,12 @@ export class LoggerService {
 
         try {
             await this._sql`
-            insert into "cello-events"
-                (cello_ip, cello_mac, event, deviceType, leftRight, log_level)
+            insert into events
+                (cello_ip, cello_mac, event, device_type, leftright, log_level)
             values 
-                (${celloEvent.cello.ip}, ${celloEvent.cello.mac}, ${celloEvent.event}, ${celloEvent.deviceType}, ${celloEvent.leftRight}, ${logLevel})
+                (${celloEvent.cello.ip}, ${celloEvent.cello.mac}, ${celloEvent.event}, ${celloEvent.deviceType}, ${
+                    celloEvent.leftRight
+                }, ${logLevel.toString()})
           `;
         } catch (error) {
             this._logger.log(LogLevel.ERROR, 'Postgres error: ' + JSON.stringify(error));

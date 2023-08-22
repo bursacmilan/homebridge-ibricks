@@ -6,4 +6,4 @@ export const PLATFORM_NAME = 'iBricksHomebridgePlugin';
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = 'ibricks-homebridge-plugin';
+export const PLUGIN_NAME = 'ibricks-homebridge-plugin-v2';

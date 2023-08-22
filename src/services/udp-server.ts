@@ -18,12 +18,15 @@ export class UdpServer {
         const server = dgram.createSocket('udp4');
         server.on('listening', () => {
             const address = server.address();
-            this._loggerService.logDebug('startAndRun', `UDP server listening on ${address.address}:${address.port}`);
+            this._loggerService.logDebug('UdpServer.StartAndRun', `UDP server listening on ${address.address}:${address.port}`);
         });
 
         server.on('message', (message, remote) => {
             const messageAsString = message.toString();
-            this._loggerService.logDebug('startAndRun', `UDP server received ${messageAsString} from ${remote.address}:${remote.port}`);
+            this._loggerService.logDebug(
+                'UdpServer.StartAndRun',
+                `UDP server received ${messageAsString} from ${remote.address}:${remote.port}`,
+            );
 
             this._messageParser.parse(messageAsString);
         });

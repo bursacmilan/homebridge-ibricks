@@ -18,7 +18,7 @@ export class MessageGenerator {
 
     //.KISS|AF=989096BE40C7|AT=000000000000|N=1149760|C|YHELO|IP=192.168.3.84|MASTER=1
     public sendIamMasterBroadcast(): void {
-        this._loggerService.logDebug('sendIamMasterBroadcast', 'Sending I am master broadcast');
+        this._loggerService.logDebug('MessageGenerator.SendIamMasterBroadcast', 'Sending I am master broadcast');
 
         const message = new Message(
             '.KISS',
@@ -40,7 +40,7 @@ export class MessageGenerator {
 
     // .KISS|AF=989096BE40C7|AT=8CAAB5FAABBE|N=3677560|C|LDSET|CH=1|V=0
     public setDimmer(cello: Cello, leftRight: number, state: number): void {
-        this._loggerService.logDebug('setDimmer', `Setting dimmer ${leftRight} to ${state} on ${cello.description}`);
+        this._loggerService.logDebug('MessageGenerator.SetDimmer', `Setting dimmer ${leftRight} to ${state} for ${cello.description}`);
 
         const message = new Message(
             '.KISS',
@@ -61,7 +61,10 @@ export class MessageGenerator {
 
     // .KISS|AF=989096BE40C7|AT=8CAAB5FAABBE|N=3677560|C|LRSET|CH=1|ST=1
     public setRelay(cello: Cello, leftRight: number, state: boolean): void {
-        this._loggerService.logDebug('setRelay', `Setting relay ${leftRight} to ${state ? 'on' : 'off'} on ${cello.description}`);
+        this._loggerService.logDebug(
+            'MessageGenerator.SetRelays',
+            `Setting relay ${leftRight} to ${state ? 'on' : 'off'} for ${cello.description}`,
+        );
 
         const valueToSet = state ? 1 : 0;
         const message = new Message(
@@ -83,7 +86,7 @@ export class MessageGenerator {
 
     //.KISS|AF=989096BE40C7|AT=8CAAB5FA31EC|N=6206168|C|YSCFG|CFG=Reboot|V=0
     public rebootCello(cello: Cello): void {
-        this._loggerService.logDebug('rebootCello', `Rebooting cello ${cello.description}`);
+        this._loggerService.logDebug('MessageGenerator.RebootCello', `Rebooting cello ${cello.description}`);
 
         const message = new Message(
             '.KISS',
@@ -105,7 +108,7 @@ export class MessageGenerator {
 
     // .KISS|AF=989096BE40C7|AT=8CAAB5FA2BB5|N=6206166|C|BDSET|CH=1|U=CEL|V=23
     public setDirector(cello: Cello, leftRight: number, state: number): void {
-        this._loggerService.logDebug('setDirector', `Setting director ${leftRight} to ${state} on ${cello.description}`);
+        this._loggerService.logDebug('MessageGenerator.SetDirector', `Setting director ${leftRight} to ${state} for ${cello.description}`);
 
         const message = new Message(
             '.KISS',
@@ -128,8 +131,8 @@ export class MessageGenerator {
     // .KISS|AF=989096BE40C7|AT=8CAAB5FA2BB5|N=2264766|C|ASSET|CH=1|CMD=HL|H=0|L=-1.000
     public setShutter(cello: Cello, leftRight: number, shutter: number, lamella: number): void {
         this._loggerService.logDebug(
-            'setShutter',
-            `Setting shutter ${leftRight} to shutter ${shutter}, lamella ${lamella} on ${cello.description}`,
+            'MessageGenerator.SetShutter',
+            `Setting shutter ${leftRight} to shutter ${shutter} and lamella ${lamella} for ${cello.description}`,
         );
 
         const shutterToSet = shutter === -1 ? -1 : shutter;

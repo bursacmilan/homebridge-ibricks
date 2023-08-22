@@ -5,6 +5,51 @@
   "schema": {
     "type": "object",
     "properties": {
+      "philipsHue": {
+        "title": "Sync with philips hue",
+        "type": "object",
+        "properties": {
+          "bridgeIp": {
+            "title": "Bridge IP",
+            "type": "string",
+            "required": true
+          },
+          "userId": {
+            "title": "User ID",
+            "type": "string",
+            "required": true
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "title": "director",
+              "type": "object",
+              "properties": {
+                "macAddress": {
+                  "title": "Mac address",
+                  "type": "string",
+                  "required": true
+                },
+                "channel": {
+                  "title": "Channel",
+                  "type": "number",
+                  "required": true
+                },
+                "deviceId": {
+                  "title": "Device ID",
+                  "type": "string",
+                  "required": true
+                },
+                "groupId": {
+                  "title": "Group ID",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        }
+      },
       "disableLamella": {
         "title": "Disable Lamella",
         "type": "array",

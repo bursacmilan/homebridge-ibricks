@@ -1,5 +1,4 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
-
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { IbricksLightPlatformAccessory } from './ibricks-light-platform-accessory';
 import { Cello } from './models/cello';
@@ -19,6 +18,7 @@ import { Device } from './devices/device';
 import { Relay } from './devices/relay';
 import { Shutter } from './devices/shutter';
 import { Director } from './devices/director';
+import { PhilipsHueSse } from './services/philips-hue-sse';
 
 export class IbricksPlatform implements DynamicPlatformPlugin {
     public readonly Service: typeof Service = this.api.hap.Service;
@@ -65,6 +65,27 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
         const messageParser = new MessageParser(loggerService);
         const messageGenerator = new MessageGenerator(udpMessageSender, loggerService, networkInfo);
 
+        // Philips Hue SSE
+        const philipsHueConfig = this.config.philipsHue as {
+            bridgeIp: string;
+            userId: string;
+            devices: { macAddress: string; channel: number; deviceId: string; groupId: string }[];
+        };
+
+        if (philipsHueConfig.bridgeIp && philipsHueConfig.userId && philipsHueConfig.devices) {
+            const philipsHueSse = new PhilipsHueSse(
+                loggerService,
+                messageParser,
+                messageGenerator,
+                philipsHueConfig.userId,
+                philipsHueConfig.bridgeIp,
+                this,
+                philipsHueConfig.devices,
+            );
+
+            philipsHueSse.startSse();
+        }
+
         // UDP Server
         new UdpServer(loggerService, messageParser, networkInfo).startAndRun();
 
@@ -77,27 +98,43 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
 
         // Relays
         const relays = devicesService.getAllRelays();
-        this._addDevices<Relay>(relays, (platform, accessory, relay) => {
-            new IbricksLightPlatformAccessory(platform, accessory, messageParser, messageGenerator, relay);
-        });
+        this._addDevices<Relay>(
+            relays,
+            (platform, accessory, relay) => {
+                new IbricksLightPlatformAccessory(platform, accessory, messageParser, messageGenerator, relay);
+            },
+            loggerService,
+        );
 
         // Shutters
         const shutters = devicesService.getAllShutters();
-        this._addDevices<Shutter>(shutters, (platform, accessory, shutter) => {
-            new IbricksShutterPlatformAccessory(platform, accessory, messageParser, messageGenerator, shutter);
-        });
+        this._addDevices<Shutter>(
+            shutters,
+            (platform, accessory, shutter) => {
+                new IbricksShutterPlatformAccessory(platform, accessory, messageParser, messageGenerator, shutter);
+            },
+            loggerService,
+        );
 
         // Directors
         const directors = devicesService.getAllDirectors(true);
-        this._addDevices<Director>(directors, (platform, accessory, director) => {
-            new IbricksDirectorPlatformAccessory(platform, accessory, messageParser, messageGenerator, director);
-        });
+        this._addDevices<Director>(
+            directors,
+            (platform, accessory, director) => {
+                new IbricksDirectorPlatformAccessory(platform, accessory, messageParser, messageGenerator, director);
+            },
+            loggerService,
+        );
 
         // Meteos
         const meteos = devicesService.getAllMeteos();
-        this._addDevices<Director>(meteos, (platform, accessory, meteo) => {
-            new IbricksMeteoPlatformAccessory(platform, accessory, messageParser, meteo);
-        });
+        this._addDevices<Director>(
+            meteos,
+            (platform, accessory, meteo) => {
+                new IbricksMeteoPlatformAccessory(platform, accessory, messageParser, meteo);
+            },
+            loggerService,
+        );
 
         // Reboot if needed
         if (config.reboot) {
@@ -110,6 +147,7 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
     private _addDevices<T>(
         devices: T[],
         accessoryFactory: (platform: IbricksPlatform, accessory: PlatformAccessory, device: T) => void,
+        loggerService: LoggerService,
     ): void {
         for (const device of devices) {
             const deviceAsBase = device as unknown as Device;
@@ -118,10 +156,13 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
             const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
             if (existingAccessory) {
-                this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+                loggerService.logDebug(
+                    'IBricksPlatform.AddDevice',
+                    `Restoring existing accessory from cache with displayName '${existingAccessory.displayName}'`,
+                );
                 accessoryFactory(this, existingAccessory, device);
             } else {
-                this.log.info('Adding new accessory:', deviceAsBase.id);
+                loggerService.logDebug('IBricksPlatform.AddDevice', `Adding new accessory with id ${deviceAsBase.id}`);
 
                 const accessory = new this.api.platformAccessory(deviceAsBase.name, uuid);
                 accessory.context.device = device;
@@ -139,7 +180,7 @@ export class IbricksPlatform implements DynamicPlatformPlugin {
                     return reject(err);
                 }
 
-                // Replace all '-' from mac and make to upper
+                // Replace all '-' from mac address and make to upper
                 resolve(mac.replace(/:/g, '').toUpperCase());
             });
         });

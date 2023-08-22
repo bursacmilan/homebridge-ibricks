@@ -155,11 +155,12 @@ export class IbricksShutterPlatformAccessory extends InternalPlatformAccessory {
             this._shutter.positionState = 0;
         }
 
+        const closeLamella = !this._shutter.lamellaDisabled && this._shutter.targetPosition === 0;
         this._messageGenerator.setShutter(
             this._shutter.cello,
             this._shutter.leftRight,
             this._shutter.convertPositionForCelloValue(this._shutter.targetPosition),
-            -1,
+            closeLamella ? this._shutter.convertLamellaForCelloValue(-90) : -1,
         );
     }
 
