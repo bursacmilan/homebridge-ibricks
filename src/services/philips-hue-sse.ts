@@ -93,7 +93,7 @@ export class PhilipsHueSse {
                         } already has the value to be set (${changeData.on?.on ? 'true' : 'false'}). Skipping`,
                     );
 
-                    return;
+                    continue;
                 }
 
                 if (philipsHueDevice.cello && changeData.on) {
@@ -126,7 +126,7 @@ export class PhilipsHueSse {
                     'PhilipsHueSse.ProcessCelloEvent',
                     `Philips hue light with id ${philipsHueDevice.id} already has the value to be set (${isOn ? 'true' : 'false'})`,
                 );
-                return;
+                continue;
             }
 
             philipsHueDevice.isOn = isOn;
