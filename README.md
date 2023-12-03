@@ -5,7 +5,7 @@ This is a plugin to integrate iBricks Cello Devices into Homebridge.
 
 ## Setup
 1. Install Homebridge
-2. Install this plugin using npm install: `npm i homebridge-ibricks-plugin`
+2. Install this plugin using npm install: `npm i homebridge-ibricks-plugin-v2`
 3. Add configuration in Homebridge for this plugin (see "Configuration" below)
 4. Restart Homebridge. This plugin will initially send a UDP Request to the Broadcast IP. All Cellos, which are in the same network, will respond with their IP and Mac-Address. 
 After that, each Cello will send his hardware information to the plugin. This takes a few minutes. I recommend to wait at least 30 minutes after the first start of Homebridge with this plugin.

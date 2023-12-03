@@ -5,6 +5,51 @@
   "schema": {
     "type": "object",
     "properties": {
+      "philipsHue": {
+        "title": "Sync with philips hue",
+        "type": "object",
+        "properties": {
+          "bridgeIp": {
+            "title": "Bridge IP",
+            "type": "string",
+            "required": true
+          },
+          "userId": {
+            "title": "User ID",
+            "type": "string",
+            "required": true
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "title": "director",
+              "type": "object",
+              "properties": {
+                "macAddress": {
+                  "title": "Mac address",
+                  "type": "string",
+                  "required": true
+                },
+                "channel": {
+                  "title": "Channel",
+                  "type": "number",
+                  "required": true
+                },
+                "deviceId": {
+                  "title": "Device ID",
+                  "type": "string",
+                  "required": true
+                },
+                "groupId": {
+                  "title": "Group ID",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        }
+      },
       "disableLamella": {
         "title": "Disable Lamella",
         "type": "array",
@@ -18,15 +63,20 @@
         "type": "boolean",
         "required": false
       },
+      "postgresSql": {
+        "title": "PostgresSQL Connection String",
+        "type": "string",
+        "required": false
+      },
       "directorTargetHeatingCoolingState": {
         "title": "Director Target Heating Cooling State",
         "type": "string",
         "default": "relay",
         "oneOf": [
-          { "title":  "Off", "enum": [ "Off" ] },
-          { "title":  "Heat", "enum": [ "Heat" ] },
-          { "title":  "Cool", "enum": [ "Cool" ] },
-          { "title":  "Auto", "enum": [ "Auto" ] }
+          { "title": "Off", "enum": ["Off"] },
+          { "title": "Heat", "enum": ["Heat"] },
+          { "title": "Cool", "enum": ["Cool"] },
+          { "title": "Auto", "enum": ["Auto"] }
         ]
       },
       "ignoreDevices": {
@@ -57,10 +107,10 @@
                     "type": "string",
                     "default": "relay",
                     "oneOf": [
-                      { "title":  "Relay", "enum": [ "relay" ] },
-                      { "title":  "Shutter", "enum": [ "shutter" ] },
-                      { "title":  "Director", "enum": [ "director" ] },
-                      { "title":  "Meteo", "enum": [ "meteo" ] }
+                      { "title": "Relay", "enum": ["relay"] },
+                      { "title": "Shutter", "enum": ["shutter"] },
+                      { "title": "Director", "enum": ["director"] },
+                      { "title": "Meteo", "enum": ["meteo"] }
                     ]
                   }
                 }

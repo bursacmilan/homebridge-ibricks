@@ -1,38 +1,112 @@
 {
-  "parser": "@typescript-eslint/parser",
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended" // uses the recommended rules from the @typescript-eslint/eslint-plugin
-  ],
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module"
-  },
-  "ignorePatterns": [
-    "dist"
-  ],
-  "rules": {
-    "quotes": ["warn", "single"],
-    "indent": ["warn", 2, { "SwitchCase": 1 }],
-    "semi": ["off"],
-    "comma-dangle": ["warn", "always-multiline"],
-    "dot-notation": "off",
-    "eqeqeq": "warn",
-    "curly": ["warn", "all"],
-    "brace-style": ["warn"],
-    "prefer-arrow-callback": ["warn"],
-    "max-len": ["warn", 140],
-    "no-console": ["warn"], // use the provided Homebridge log method instead
-    "no-non-null-assertion": ["off"],
-    "comma-spacing": ["error"],
-    "no-multi-spaces": ["warn", { "ignoreEOLComments": true }],
-    "no-trailing-spaces": ["warn"],
-    "lines-between-class-members": ["warn", "always", {"exceptAfterSingleLine": true}],
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/semi": ["warn"],
-    "@typescript-eslint/member-delimiter-style": ["warn"]
-  }
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "project": ["tsconfig.json"],
+        "createDefaultProgram": true
+    },
+    "ignorePatterns": ["dist"],
+    "rules": {
+        "@typescript-eslint/explicit-function-return-type": "error",
+        "@typescript-eslint/explicit-member-accessibility": [
+            "error",
+            {
+                "accessibility": "explicit",
+                "overrides": {
+                    "constructors": "off"
+                }
+            }
+        ],
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+                "selector": "default",
+                "format": ["strictCamelCase"]
+            },
+            {
+                "selector": "variable",
+                "format": ["strictCamelCase", "UPPER_CASE", "PascalCase"],
+                "modifiers": ["const"]
+            },
+            {
+                "selector": "parameter",
+                "format": ["strictCamelCase"],
+                "leadingUnderscore": "allow"
+            },
+            {
+                "selector": "memberLike",
+                "modifiers": ["private"],
+                "format": ["strictCamelCase"],
+                "leadingUnderscore": "require"
+            },
+            {
+                "selector": "typeLike",
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": "classProperty",
+                "format": ["strictCamelCase", "UPPER_CASE", "PascalCase"],
+                "modifiers": ["public", "readonly"]
+            },
+            {
+                "selector": "objectLiteralProperty",
+                "format": null
+            },
+            {
+                "selector": "enumMember",
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": ["variable", "parameter"],
+                "format": null,
+                "modifiers": ["destructured"]
+            },
+            {
+                "selector": "interface",
+                "format": ["PascalCase"],
+                "custom": {
+                    "regex": "^I[A-Z]",
+                    "match": false
+                }
+            }
+        ],
+        "@typescript-eslint/prefer-readonly": "error",
+        "no-restricted-imports": "off",
+        "@typescript-eslint/no-restricted-imports": [
+            "error",
+            {
+                "patterns": [
+                    {
+                        "group": ["**/src/*"],
+                        "message": "Usage of import from outside the src directory are not allowed"
+                    }
+                ]
+            }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "ignoreRestSiblings": true
+            }
+        ],
+        "no-empty-function": [
+            "error",
+            {
+                "allow": ["constructors"]
+            }
+        ],
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "error",
+        "brace-style": "off",
+        "@typescript-eslint/brace-style": "error",
+        "object-shorthand": "error",
+        "curly": "error"
+    }
 }
